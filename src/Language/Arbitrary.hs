@@ -13,7 +13,6 @@ import Language.Type
 import Language.Container
 import Language.Expr
 import Language.Problem
-import Language.Generics
 
 (|:) :: [a] -> a -> NonEmpty a
 xs |: x = foldr NonEmpty.cons (pure x) xs
@@ -62,12 +61,12 @@ constant = \case
   Free _ -> error "Unexpected free variable"
   Base Int -> resize 3 $ Lit . MkInt <$> arbitrary
   Product ts -> Tuple <$> forM ts (scale (`div` length ts) . constant)
-  Data "Bool" [] -> toExpr @Bool <$> arbitrary
-  Data "Ordering" [] -> toExpr @Ordering <$> arbitrary
-  Data "List" [t] -> toExpr @[_] <$> liftArbitrary
+  Data "Bool" [] -> toExpr (type Bool) <$> arbitrary
+  Data "Ordering" [] -> toExpr (type Ordering) <$> arbitrary
+  Data "List" [t] -> toExpr (type [_]) <$> liftArbitrary
     (scale (`div` 2) $ constant t)
-  Data "Maybe" [t] -> toExpr @(Maybe _) <$> liftArbitrary (constant t)
-  Data "Tree" [t, u] -> toExpr @(Tree _ _) <$> liftArbitrary2
+  Data "Maybe" [t] -> toExpr (type (Maybe _)) <$> liftArbitrary (constant t)
+  Data "Tree" [t, u] -> toExpr (type (Tree _ _)) <$> liftArbitrary2
     (scale (`div` 2) $ constant t) (scale (`div` 2) $ constant u)
   Data t _ -> error $ "Datatype " <> show t <> " not supported"
 

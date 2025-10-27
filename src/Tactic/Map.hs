@@ -7,7 +7,6 @@ import Data.Some
 import Language.Expr
 import Language.Problem
 import Language.Type
-import Language.Generics
 
 import Tactic.Check
 import Tactic.Core
@@ -48,7 +47,7 @@ mapSome name = do
             let
               xs = case inputs of
                 [] -> error "cannot be"
-                (y:ys) -> toExpr $ toSome y ys
+                (y:ys) -> toExpr _ $ toSome y ys
             return $ zipWith
               (\x y -> Example (scope ++ [x, xs]) y) inputs outputs
           _ -> error "Not actually lists."

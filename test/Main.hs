@@ -18,7 +18,6 @@ import Language.Container.Morphism
 import Language.Expr
 import Language.Problem
 import Language.Prelude
-import Language.Generics
 import Tactic
 import Synth
 import Bench

@@ -11,7 +11,7 @@ import Test.Tasty (testGroup)
 import Test.Tasty.Bench
 import Test.QuickCheck hiding (Success, Failure)
 
-import Language.Generics (Interpret(..), Execute(..))
+import Language.Expr
 import Language.Parser
 import Language.Problem
 import Language.Prelude

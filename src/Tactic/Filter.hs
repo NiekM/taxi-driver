@@ -8,7 +8,6 @@ import Data.Some
 import Language.Expr
 import Language.Problem
 import Language.Type
-import Language.Generics
 
 import Tactic.Core
 import Tactic.Check
@@ -58,7 +57,7 @@ filterSome name = do
             let
               xs = case inputs of
                 [] -> error "cannot be"
-                (y:ys) -> toExpr $ toSome y ys
+                (y:ys) -> toExpr _ $ toSome y ys
             return $ List.nub inputs <&> \x ->
               Example (scope ++ [x, xs]) $ Bool $ x `elem` outputs
           _ -> error "Not actually lists."

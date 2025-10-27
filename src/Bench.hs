@@ -8,7 +8,6 @@ import Data.Text.IO qualified as Text
 import System.Directory
 import Test.QuickCheck (Property, discard, Arbitrary, property, witness)
 
-import Language.Generics (Interpret(..), ToExpr(..), Execute(..))
 import Language.Problem
 import Language.Parser
 import Language.Expr
@@ -49,12 +48,12 @@ loadAll = do
 class Compare a where
   comparison :: a -> a -> Property
 
-instance {-# OVERLAPPABLE #-} (ToExpr a, Eq a) => Compare a where
-  comparison x y = witness (toExpr x) . witness (toExpr y) $ property $ x == y
+instance {-# OVERLAPPABLE #-} (ToValue a, Eq a) => Compare a where
+  comparison x y = witness (toValue a x) . witness (toValue a y) $ property $ x == y
 
-instance {-# OVERLAPPABLE #-} (ToExpr a, Arbitrary a, Show a, Compare b) =>
+instance {-# OVERLAPPABLE #-} (ToValue a, Arbitrary a, Show a, Compare b) =>
   Compare (a -> b) where
-  comparison f g = property \x -> witness (toExpr x) $ comparison (f x) (g x)
+  comparison f g = property \x -> witness (toValue a x) $ comparison (f x) (g x)
 
 data Model = forall a. (Compare a, Interpret a, Execute a) => Model a
 

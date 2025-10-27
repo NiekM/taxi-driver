@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE RequiredTypeArguments #-}
 {-# LANGUAGE TypeAbstractions #-}
 module Language.Expr
   ( Expr
@@ -11,28 +13,37 @@ module Language.Expr
     , Ordering
     , Nil, Cons, List
     , Zero, Succ, Nat
+    , Tree, TangoLL, TangoLN
     )
   , Lit(..)
   , Program
   , Term
-  , Value
+  , Value, isValue
   , holes
   , accept
   , freeVars
   , normalize
   , asProgram
-  , toValue
   , tuple
   , lets
   , compareVal
+  , ToExpr(..)
+  , FromExpr(..)
+  , ToValue, toValue
+  , FromValue, fromValue
+  , Interpret(..)
+  , Execute(..)
   ) where
 
-import Prelude hiding (Enum(..), error)
+import GHC.Generics hiding (Constructor)
+import GHC.TypeLits (KnownSymbol, symbolVal)
 
 import Data.List qualified as List
 import Data.Map qualified as Map
 import Data.Set qualified as Set
 import Data.Foldable
+
+import Data.Proxy
 
 import Data.Tango.List.List as LL
 import Data.Tango.List.Nat  as LN
@@ -41,6 +52,9 @@ import Data.Tree.Binary
 import Unsafe.Coerce qualified as Unsafe
 
 import Base
+
+import Data.Some (Some)
+import Test.QuickCheck (SortedList(..))
 
 newtype Lit = MkInt Int
   deriving stock (Eq, Ord, Show)
@@ -129,6 +143,10 @@ tuple xs = Tuple xs
 normalize :: Expr l h -> Expr l h
 normalize = norm mempty
 
+foldNat :: Nat -> (a -> a) -> a -> a
+foldNat 0 _ e = e
+foldNat n f e = f (foldNat (n - 1) f e)
+
 paraNat :: ((Nat, b) -> b) -> b -> Nat -> b
 paraNat _ e 0 = e
 paraNat g e n = g (n - 1, paraNat g e (n - 1))
@@ -163,14 +181,14 @@ norm @_ @h ctx = \case
     Apps (Var "para") [alg, arg@Ctr{}] -> norm ctx $ appPara alg arg
     Apps (Var "map") [g, List xs] -> List $ map (norm ctx . App g) xs
     Apps (Var "filter") [p, List xs] -> List $
-      filter (fromMaybe False . unBool . norm ctx . App p) xs
-    Apps (Var "tango") [List xs, List ys] -> mkTangoLL $ LL.tango xs ys
-    Apps (Var "tango") [List xs, Nat n] -> mkTangoLN $ LN.tango xs n
+      filter (fromMaybe False . fromExpr . norm ctx . App p) xs
+    Apps (Var "tango") [List xs, List ys] -> TangoLL $ LL.tango xs ys
+    Apps (Var "tango") [List xs, Nat n] -> TangoLN $ LN.tango xs n
     Apps (Var "eq" ) [Value a, Value b] -> Bool (a == b)
     Apps (Var "cmp") [Value a, Value b] -> Ordering (compareVal a b)
     e -> e
   Prj i x -> case norm ctx x of
-    Tuple xs -> norm ctx $ xs !! fromIntegral i
+    Tuple xs -> norm ctx $ xs List.!! fromIntegral i
     y -> Prj i y
   Elim xs -> Elim $ map (norm ctx <$>) xs
   Hole h -> Hole h
@@ -207,10 +225,10 @@ asProgram = Unsafe.unsafeCoerce
 -- * Values
 
 -- NOTE: these form a prism
-toValue :: Expr l h -> Maybe Value
-toValue = \case
-  Tuple xs -> Tuple <$> traverse toValue xs
-  Ctr c x -> Ctr c <$> toValue x
+isValue :: Expr l h -> Maybe Value
+isValue = \case
+  Tuple xs -> Tuple <$> traverse isValue xs
+  Ctr c x -> Ctr c <$> isValue x
   Lit i -> Just $ Lit i
   Var _ -> Nothing
   Lam _ _ -> Nothing
@@ -220,11 +238,11 @@ toValue = \case
   Hole _ -> Nothing
 
 pattern Value :: Value -> Expr l h
-pattern Value v <- (toValue -> Just v)
-  where Value v = fromValue v
+pattern Value v <- (isValue -> Just v)
+  where Value v = valueToExpr v
 
-fromValue :: Value -> Expr l h
-fromValue = \case
+valueToExpr :: Value -> Expr l h
+valueToExpr = \case
   Hole v -> absurd v
   e -> Unsafe.unsafeCoerce e
 
@@ -279,27 +297,15 @@ pattern Nil = Ctr "[]" Unit
 pattern Cons :: Expr l h -> Expr l h -> Expr l h
 pattern Cons x xs = Ctr ":" (Tuple [x, xs])
 
-unList :: Expr l h -> Maybe [Expr l h]
-unList = \case
-  Nil -> Just []
-  Cons x xs -> (x:) <$> unList xs
-  _ -> Nothing
-
 pattern List :: [Expr l h] -> Expr l h
-pattern List xs <- (unList -> Just xs)
-  where List xs = foldr Cons Nil xs
+pattern List xs <- (fromExpr -> Just xs)
+  where List xs = toExpr _ xs
 
 -- * Trees
 
-unTree :: Expr l h -> Maybe (Tree (Expr l h) (Expr l h))
-unTree = \case
-  Ctr "Leaf" x -> Just $ Leaf x
-  Ctr "Node" (Tuple [l, x, r]) -> Node <$> unTree l <*> pure x <*> unTree r
-  _ -> Nothing
-
 pattern Tree :: Tree (Expr l h) (Expr l h) -> Expr l h
-pattern Tree t <- (unTree -> Just t)
-  where Tree t = foldTree (\l x r -> Ctr "Node" $ Tuple [l, x, r]) (Ctr "Leaf") t
+pattern Tree t <- (fromExpr -> Just t)
+  where Tree t = toExpr _ t
 
 -- * Nats
 
@@ -309,81 +315,215 @@ pattern Zero = Ctr "Zero" Unit
 pattern Succ :: Expr l h -> Expr l h
 pattern Succ n = Ctr "Succ" n
 
-unNat :: Expr l h -> Maybe Nat
-unNat = \case
-  Zero -> Just 0
-  Succ n -> (1+) <$> unNat n
-  _ -> Nothing
-
-foldNat :: Nat -> (a -> a) -> a -> a
-foldNat 0 _ e = e
-foldNat n f e = f (foldNat (n - 1) f e)
-
 pattern Nat :: Nat -> Expr l h
-pattern Nat n <- (unNat -> Just n)
-  where Nat n = foldNat n Succ Zero
+pattern Nat n <- (fromExpr -> Just n)
+  where Nat n = toExpr _ n
 
 -- * Bools
 
-unBool :: Expr l h -> Maybe Bool
-unBool = \case
-  Ctr "True"  Unit -> Just True
-  Ctr "False" Unit -> Just False
-  _ -> Nothing
-
 pattern Bool :: Bool -> Expr l h
-pattern Bool b <- (unBool -> Just b)
-  where Bool b = Ctr (fromString $ show b) Unit
+pattern Bool b <- (fromExpr -> Just b)
+  where Bool b = toExpr _ b
 
 -- * Orderings
 
-unOrdering :: Expr l h -> Maybe Ordering
-unOrdering = \case
-  Ctr "LT" Unit -> Just LT
-  Ctr "EQ" Unit -> Just EQ
-  Ctr "GT" Unit -> Just GT
-  _ -> Nothing
-
 pattern Ordering :: Ordering -> Expr l h
-pattern Ordering o <- (unOrdering -> Just o)
-  where Ordering o = Ctr (fromString $ show o) Unit
+pattern Ordering o <- (fromExpr -> Just o)
+  where Ordering o = toExpr _ o
 
 -- * Tango
 
-mkTangoLL :: TangoListList (Expr l h) (Expr l h) -> Expr l h
-mkTangoLL = \case
-  NN -> Ctr "NN" $ Tuple []
-  CN x xs -> Ctr "CN" $ Tuple [x, List xs]
-  NC y ys -> Ctr "NC" $ Tuple [y, List ys]
-  CC x y xys -> Ctr "CC" $ Tuple [x, y, mkTangoLL xys]
-
-mkTangoLN :: TangoListNat (Expr l h) -> Expr l h
-mkTangoLN = \case
-  NZ -> Ctr "NZ" $ Tuple []
-  CZ x xs -> Ctr "CZ" $ Tuple [x, List xs]
-  NS n -> Ctr "NS" $ Nat n
-  CS x xns -> Ctr "CS" $ Tuple [x, mkTangoLN xns]
-
-unTangoLL :: Expr l h -> Maybe (TangoListList (Expr l h) (Expr l h))
-unTangoLL = \case
-  Ctr "NN" Unit -> Just NN
-  Ctr "CN" (Tuple [x, List xs]) -> Just $ CN x xs
-  Ctr "NC" (Tuple [y, List ys]) -> Just $ NC y ys
-  Ctr "CC" (Tuple [x, y, unTangoLL -> Just xys]) -> Just $ CC x y xys
-  _ -> Nothing
-
 pattern TangoLL :: TangoListList (Expr l h) (Expr l h) -> Expr l h
-pattern TangoLL xys <- (unTangoLL -> Just xys)
-  where TangoLL xys = mkTangoLL xys
-
-unTangoLN :: Expr l h -> Maybe (TangoListNat (Expr l h))
-unTangoLN = \case
-  Ctr "NZ" Unit -> Just NZ
-  Ctr "CZ" (Tuple [x, List xs]) -> Just $ CZ x xs
-  Ctr "NS" (Nat n) -> Just $ NS n
-  Ctr "CS" (Tuple [x, unTangoLN -> Just xns]) -> Just $ CS x xns
-  _ -> Nothing
+pattern TangoLL xys <- (fromExpr -> Just xys)
+  where TangoLL xys = toExpr _ xys
 
 pattern TangoLN :: TangoListNat (Expr l h) -> Expr l h
-pattern TangoLN xys <- (unTangoLN -> Just xys)
-  where TangoLN xys = mkTangoLN xys
+pattern TangoLN xys <- (fromExpr -> Just xys)
+  where TangoLN xys = toExpr _ xys
+
+symbolName :: forall s -> KnownSymbol s => Name
+symbolName s = fromString . symbolVal $ Proxy @s
+
+-- * Generic instances
+
+-- | Turn a Haskell container into an `Expr` (embedding).
+class ToExpr l h a where
+  toExpr :: forall t -> (t ~ a) => a -> Expr l h
+
+  default toExpr :: (Generic a, GToExpr l h (Rep a)) => forall t -> (t ~ a) => a -> Expr l h
+  toExpr _ = gtoExpr . from
+
+type ToValue = ToExpr False Void
+
+toValue :: forall a -> ToValue a => a -> Value
+toValue t = toExpr t
+
+instance ToExpr l h (Expr l h) where
+  toExpr _ = id
+
+instance ToExpr l h Nat where
+  toExpr _ 0 = Zero
+  toExpr _ n = Succ $ toExpr _ (n - 1)
+
+instance ToExpr l h () where
+  toExpr _ () = Unit
+
+instance (ToExpr l h a, ToExpr l h b) => ToExpr l h (a, b) where
+  toExpr _ (x, y) = Tuple [toExpr _ x, toExpr _ y]
+
+instance (ToExpr l h a, ToExpr l h b, ToExpr l h c) => ToExpr l h (a, b, c) where
+  toExpr _ (x, y, z) = Tuple [toExpr _ x, toExpr _ y, toExpr _ z]
+
+-- instance ToExpr l h ()
+instance ToExpr l h Bool
+instance ToExpr l h Ordering
+instance ToExpr l h a => ToExpr l h (Maybe a)
+instance ToExpr l h a => ToExpr l h (Some a)
+instance ToExpr l h a => ToExpr l h [a]
+instance (ToExpr l h a) => ToExpr l h (TangoListNat a)
+instance (ToExpr l h a, ToExpr l h b) => ToExpr l h (Either a b)
+instance (ToExpr l h a, ToExpr l h b) => ToExpr l h (Tree a b)
+instance (ToExpr l h a, ToExpr l h b) => ToExpr l h (TangoListList a b)
+
+instance ToExpr l h a => ToExpr l h (SortedList a) where
+  toExpr _ (Sorted xs) = toExpr _ xs
+
+class GToExpr l h f where
+  gtoExpr :: f a -> Expr l h
+
+instance GToExpr l h U1 where
+  gtoExpr _ = Unit
+
+instance ToExpr l h c => GToExpr l h (K1 i c) where
+  gtoExpr (K1 c) = toExpr (type c) c
+
+instance GToExpr l h f => GToExpr l h (D1 c f) where
+  gtoExpr (M1 p) = gtoExpr p
+
+instance GToExpr l h f => GToExpr l h (S1 c f) where
+  gtoExpr (M1 p) = gtoExpr p
+
+instance (KnownSymbol c, GToExpr l h f) => GToExpr l h (C1 (MetaCons c g s) f) where
+  gtoExpr (M1 p) = Ctr (symbolName c) $ gtoExpr p
+
+instance (GToExpr l h a, GToExpr l h b) => GToExpr l h (a :+: b) where
+  gtoExpr (L1 p) = gtoExpr p
+  gtoExpr (R1 p) = gtoExpr p
+
+instance (GToExpr l h a, GToExpr l h b) => GToExpr l h (a :*: b) where
+  gtoExpr (a :*: b) = tuple $ gtoExpr a : projections (gtoExpr b)
+
+-- | Turn a `Value` into a Haskell value of type `a` (extraction).
+class FromExpr l h a where
+  fromExpr :: Expr l h -> Maybe a
+
+  default fromExpr :: (Generic a, GFromExpr l h (Rep a)) => Expr l h -> Maybe a
+  fromExpr = fmap to . gfromExpr
+
+type FromValue = FromExpr False Void
+
+fromValue :: forall a -> FromValue a => Value -> Maybe a
+fromValue _ = fromExpr
+
+instance FromExpr l h (Expr l h) where
+  fromExpr = Just
+
+instance FromExpr l h Int where
+  fromExpr = \case
+    Lit (MkInt i) -> Just i
+    _ -> Nothing
+
+instance FromExpr l h Nat where
+  fromExpr = \case
+    Zero -> Just 0
+    Succ n -> (1+) <$> fromExpr n
+    _ -> Nothing
+
+instance FromExpr l h () where
+  fromExpr = \case
+    Unit -> Just ()
+    _ -> Nothing
+
+instance (FromExpr l h a, FromExpr l h b) => FromExpr l h (a, b) where
+  fromExpr = \case
+    Tuple [x, y] -> liftA2 (,) (fromExpr x) (fromExpr y)
+    _ -> Nothing
+
+instance (FromExpr l h a, FromExpr l h b, FromExpr l h c) => FromExpr l h (a, b, c) where
+  fromExpr = \case
+    Tuple [x, y, z] -> liftA3 (,,) (fromExpr x) (fromExpr y) (fromExpr z)
+    _ -> undefined
+
+-- instance FromExpr l h ()
+instance FromExpr l h Bool
+instance FromExpr l h Ordering
+instance FromExpr l h a => FromExpr l h (Maybe a)
+instance FromExpr l h a => FromExpr l h [a]
+instance FromExpr l h a => FromExpr l h (TangoListNat a)
+instance (FromExpr l h a, FromExpr l h b) => FromExpr l h (Either a b)
+instance (FromExpr l h a, FromExpr l h b) => FromExpr l h (Tree a b)
+instance (FromExpr l h a, FromExpr l h b) => FromExpr l h (TangoListList a b)
+
+instance FromExpr l h a => FromExpr l h (SortedList a) where
+  fromExpr xs = Sorted <$> fromExpr xs
+
+class GFromExpr l h f where
+  gfromExpr :: Expr l h -> Maybe (f a)
+
+instance GFromExpr l h U1 where
+  gfromExpr = \case
+    Unit -> Just U1
+    _ -> Nothing
+
+instance FromExpr l h c => GFromExpr l h (K1 i c) where
+  gfromExpr = fmap K1 . fromExpr
+
+instance GFromExpr l h f => GFromExpr l h (D1 c f) where
+  gfromExpr = fmap M1 . gfromExpr
+
+instance GFromExpr l h f => GFromExpr l h (S1 c f) where
+  gfromExpr = fmap M1 . gfromExpr
+
+instance (KnownSymbol c, GFromExpr l h f) => GFromExpr l h (C1 (MetaCons c g s) f) where
+  gfromExpr = \case
+    Ctr d e | d == symbolName c -> M1 <$> gfromExpr e
+    _ -> Nothing
+
+instance (GFromExpr l h a, GFromExpr l h b) => GFromExpr l h (a :+: b) where
+  gfromExpr e = case gfromExpr e of
+    Just x -> Just $ L1 x
+    Nothing -> R1 <$> gfromExpr e
+
+instance (GFromExpr l h a, GFromExpr l h b) => GFromExpr l h (a :*: b) where
+  gfromExpr = \case
+    Tuple (x:xs) -> liftA2 (:*:) (gfromExpr x) (gfromExpr $ tuple xs)
+    _ -> Nothing
+
+-- | Interpret a program as a Haskell function.
+class Interpret a where
+  interpret :: Program Void -> a
+
+instance {-# OVERLAPPING #-} FromExpr False Void a => Interpret a where
+  interpret e = case normalize e of
+    Value v -> case fromExpr v of
+      Nothing -> error $ "Not a value: " ++ show v
+      Just x -> x
+    _ -> error "normalized expression is not a value"
+
+instance {-# OVERLAPPING #-}
+  (ToValue a, Interpret b) => Interpret (a -> b) where
+  interpret p = interpret . App p . Value . toValue a
+
+-- | Execute a Haskell function on a list of values.
+class Execute a where
+  execute :: a -> [Value] -> Value
+
+instance {-# OVERLAPPING #-} ToValue a => Execute a where
+  execute (toValue a -> v) [] = v
+  execute _ _ = error "Either not a value, or too many arguments"
+
+instance {-# OVERLAPPING #-} (FromValue a, Execute b) => Execute (a -> b) where
+  execute _ [] = error "Not enough arguments"
+  execute f (x:xs) = case fromValue a x of
+    Nothing -> error $ show x <> " not a valid expression"
+    Just e -> execute (f e) xs

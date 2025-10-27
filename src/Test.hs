@@ -32,7 +32,6 @@ import Language.Container
 import Language.Container.Morphism
 import Language.Container.Relation
 import Language.Coverage
-import Language.Generics
 import Language.Problem
 import Language.Parser
 import Language.Pretty
@@ -180,3 +179,8 @@ tryOut :: Interpret a => Problem -> a
 tryOut problem = case synthesize def problem of
   Success ((_, Finished program) :| _) -> interpret program
   _ -> error "Synthesis failed"
+
+
+-- Weird insert...
+myInsert :: Ord a => a -> [a] -> [a]
+myInsert x = foldr (\y r -> min x y : map (max y) r) [x]

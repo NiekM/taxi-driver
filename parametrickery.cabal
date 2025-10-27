@@ -93,7 +93,6 @@ library
     , Language.Container.Morphism
     , Language.Container.Relation
     , Language.Coverage
-    , Language.Generics
     , Language.Parser
     , Language.Prelude
     , Language.Pretty

@@ -39,7 +39,7 @@ elimOrd name1 name2 = do
       when (a /= b) $ throwError $ NotApplicable "args done't have the same type"
       when (Ord a `notElem` problem.signature.constraints) $
         throwError $ NotApplicable "type has no Ord constraint"
-      case (traverse toValue xs, traverse toValue ys) of
+      case (traverse isValue xs, traverse isValue ys) of
         (Just xs', Just ys') -> do
           let ords = Arg (Data "Ordering" []) $ Ordering <$> zipWith compareVal xs' ys'
           elimArg (Apps (Var "cmp") [Var name1, Var name2]) ords

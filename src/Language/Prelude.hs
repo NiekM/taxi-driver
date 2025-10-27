@@ -8,7 +8,6 @@ import Data.Tree.Binary
 import Data.Tango.List.List
 import Data.Tango.List.Nat
 
-import Language.Generics
 import Language.Type
 
 data Nat

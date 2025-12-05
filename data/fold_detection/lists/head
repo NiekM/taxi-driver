@@ -1,5 +1,0 @@
-head : {xs : List a} -> Maybe a
-head [1, 2, 3] = Just 1
-head [True, False] = Just True
-head [()] = Just ()
-head [] = Nothing

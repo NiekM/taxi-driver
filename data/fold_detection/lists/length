@@ -1,5 +1,0 @@
-length : {xs : List a} -> Nat
-length [1, 2, 3] = 3
-length [True, False] = 2
-length [()] = 1
-length [] = 0

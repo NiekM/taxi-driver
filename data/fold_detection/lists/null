@@ -1,5 +1,0 @@
-null : {xs : List a} -> Bool
-null [1, 2, 3] = False
-null [True, False] = False
-null [()] = False
-null [] = True

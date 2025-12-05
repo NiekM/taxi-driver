@@ -1,5 +1,0 @@
-init : {xs : List a} -> List a
-init [1, 2, 3] = [1, 2]
-init [True, False] = [True]
-init [()] = []
-init [] = []

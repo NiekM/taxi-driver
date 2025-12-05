@@ -1,5 +1,0 @@
-reverse : {xs : List a} -> List a
-reverse [1, 2, 3] = [3, 2, 1]
-reverse [True, False] = [False, True]
-reverse [()] = [()]
-reverse [] = []

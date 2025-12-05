@@ -1,5 +1,0 @@
-last : {xs : List a} -> Maybe a
-last [1, 2, 3] = Just 3
-last [True, False] = Just False
-last [()] = Just ()
-last [] = Nothing

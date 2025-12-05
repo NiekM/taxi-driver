@@ -1,5 +1,0 @@
-snoc : {x : a, xs : List a} -> List a
-snoc 0 [] = [0]
-snoc 0 [1] = [1, 0]
-snoc 0 [2, 1] = [2, 1, 0]
-snoc 0 [3, 2, 1] = [3, 2, 1, 0]

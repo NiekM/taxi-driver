@@ -1,5 +1,0 @@
-replicate : {n : Nat, x : a} -> List a
-replicate Zero 0 = []
-replicate (Succ Zero) 1 = [1]
-replicate (Succ (Succ Zero)) 2 = [2,2]
-replicate (Succ (Succ (Succ Zero))) 3 = [3,3,3]

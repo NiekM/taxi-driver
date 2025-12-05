@@ -1,5 +1,0 @@
-cons : {x : a, xs : List a} -> List a
-cons 0 [] = [0]
-cons 0 [1] = [0, 1]
-cons 0 [2, 1] = [0, 2, 1]
-cons 0 [3, 2, 1] = [0, 3, 2, 1]

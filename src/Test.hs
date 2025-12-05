@@ -189,27 +189,3 @@ decorate = fst . go 0 where
     where
       (x, m) = go (n + 1) l
       (y, k) = go m r
-
-loadMaxRefinements :: IO [Named Problem]
-loadMaxRefinements = do
-  signatures <- Text.lines <$> Text.readFile "data/refinements/maximum/signatures"
-  examples <- Text.readFile "data/refinements/maximum/examples"
-  let combined = signatures <&> \signature -> signature <> "\n" <> examples
-  forM combined \p -> do
-    case lexParse (parser @(Named Problem)) p of
-      Nothing -> error "Failed to parse"
-      Just problem -> return problem
-
-loadDedupRefinements :: IO [Named Problem]
-loadDedupRefinements = do
-  signatures <- Text.lines <$> Text.readFile "data/refinements/dedup/signatures"
-  examples <- Text.readFile "data/refinements/dedup/examples"
-  let combined = signatures <&> \signature -> signature <> "\n" <> examples
-  forM combined \p -> do
-    case lexParse (parser @(Named Problem)) p of
-      Nothing -> error "Failed to parse"
-      Just problem -> return problem
-
--- >>> ps <- loadDedupRefinements 
--- >>> pretty . zip [1..] $ check datatypes . (.value) <$> ps
--- <only 3, 4, and 5 are not contradictory>

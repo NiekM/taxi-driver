@@ -1,9 +1,0 @@
-drop : {n : Nat, xs : List a} -> List a
-drop 1 [1, 2, 3] = [2, 3]
-drop 1 [True, False] = [False]
-drop 1 [()] = []
-drop 1 [] = []
-drop 2 [1, 2, 3] = [3]
-drop 2 [True, False] = []
-drop 2 [()] = []
-drop 2 [] = []

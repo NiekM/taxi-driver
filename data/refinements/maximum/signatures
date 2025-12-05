@@ -1,8 +1,0 @@
-maximum :          {xs : List a}   -> Maybe b
-maximum :          {xs : List a}   -> Maybe a
-maximum : Eq  a => {xs : List a}   -> Maybe a
-maximum : Ord a => {xs : List a}   -> Maybe a
-maximum :          {xs : List Nat} -> Maybe Nat
-maximum :          {xs : List a}   -> Maybe Nat
-maximum : Eq  a => {xs : List a}   -> Maybe Nat
-maximum : Ord a => {xs : List a}   -> Maybe Nat

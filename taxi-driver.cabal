@@ -91,7 +91,6 @@ library taxi-driver-prelude
     , Data.Map.Utils
     , Data.Name
     , Data.Nat
-    , Data.Some
     , Data.Tango.List.List
     , Data.Tango.List.Nat
     , Data.Tree.Binary

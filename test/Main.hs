@@ -88,9 +88,7 @@ synthesisSucceeds problems = testGroup "synthesis" $ problems <&> \(Named name (
   -- [?] `greedy` always succeeds
   -- [ ] tactics "preserve" totality (the total amount of missing cases should stay the same)
   -- [ ] isMap ==> isFold
-  -- [ ] isMap ==> isMapSome
   -- [ ] isFilter ==> isFold
-  -- [ ] isFilter ==> isFilterSome
   -- [ ] reversible ==> isFold
   -- [ ] preserveRealizable introCtr
   -- [ ] preserveRealizable introTuple

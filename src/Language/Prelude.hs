@@ -3,7 +3,6 @@ module Language.Prelude (datatypes) where
 import Base hiding (Nat)
 import GHC.Generics
 
-import Data.Some
 import Data.Tree.Binary
 import Data.Tango.List.List
 import Data.Tango.List.Nat
@@ -24,7 +23,6 @@ datatypes = DataContext $
   , toData (type [])
   , toData Either
   , toData Tree
-  , toData Some
   , toData TangoListList
   , toData TangoListNat
   ] >>= \d -> d : maybeToList (base d)

@@ -53,7 +53,6 @@ import Unsafe.Coerce qualified as Unsafe
 
 import Base
 
-import Data.Some (Some)
 import Test.QuickCheck (SortedList(..))
 
 newtype Lit = MkInt Int
@@ -381,7 +380,6 @@ instance (ToExpr l h a, ToExpr l h b, ToExpr l h c) => ToExpr l h (a, b, c) wher
 instance ToExpr l h Bool
 instance ToExpr l h Ordering
 instance ToExpr l h a => ToExpr l h (Maybe a)
-instance ToExpr l h a => ToExpr l h (Some a)
 instance ToExpr l h a => ToExpr l h [a]
 instance (ToExpr l h a) => ToExpr l h (TangoListNat a)
 instance (ToExpr l h a, ToExpr l h b) => ToExpr l h (Either a b)

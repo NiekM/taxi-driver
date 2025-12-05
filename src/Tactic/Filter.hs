@@ -3,7 +3,6 @@ module Tactic.Filter where
 import Base
 import Control.Effect.Fresh.Named
 import Data.List qualified as List
-import Data.Some
 
 import Language.Expr
 import Language.Problem
@@ -39,38 +38,6 @@ filter name = do
         local (const subproblem) do
           f <- rerealize hole
           let result = Apps (Var "filter") [Lams [x] f, Var name]
-          return result
-      _ -> throwError $ NotApplicable "filter only works on lists"
-
--- Generalized filter whose predicate has access to a nonempty list.
-filterSome :: Tactic sig m => Name -> m Filling
-filterSome name = do
-  Arg mono terms <- getArg name
-  local (hide [name]) do
-    problem <- ask @Problem
-    case (mono, problem.signature.output) of
-      (Data "List" [t], Data "List" [u]) -> do
-        when (t /= u) $ throwError $ NotApplicable "list types do not match"
-        examples <- forM (zip terms problem.examples) \case
-          (List inputs, Example scope (List outputs)) -> do
-            unless (isFilter inputs outputs) $ throwError $ PropagationError "not a filter"
-            let
-              xs = case inputs of
-                [] -> error "cannot be"
-                (y:ys) -> toExpr _ $ toSome y ys
-            return $ List.nub inputs <&> \x ->
-              Example (scope ++ [x, xs]) $ Bool $ x `elem` outputs
-          _ -> error "Not actually lists."
-        x <- freshName "x"
-        xs <- freshName "xs"
-        let
-          Signature constraints context _ = problem.signature
-          signature =
-            Signature constraints (context ++ [Named x t, Named xs (Data "Some" [t])]) (Data "Bool" [])
-          subproblem = Problem signature $ concat examples
-        local (const subproblem) do
-          f <- rerealize hole
-          let result = Apps (Var "filterSome") [Lams [x, xs] f, Var name]
           return result
       _ -> throwError $ NotApplicable "filter only works on lists"
 
@@ -137,8 +104,6 @@ filterArg name = do
           let result = Apps (Var "filterArg") [Lams [x, xs] f, Var name]
           return result
       _ -> throwError $ NotApplicable "filter only works on lists"
-
--- TODO: filterSome
 
 -- NOTE: one way to generalize filter.
 -- It would be cool to define filter in terms of partition, but we'd need to first introduce a 'fst' tactic, which has a wildcard on the second field of a tuple.

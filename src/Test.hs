@@ -116,7 +116,7 @@ synthAll = do
     testAndPrint problem result = do
       let f = normalize result
       print . indent 2 $ prettyNamed problem.name f
-      case vacant f of
+      case vacate f of
         Nothing -> False <$ putStrLn "Some holes left!"
         Just p -> do
           putStrLn ""

@@ -45,7 +45,7 @@ computePositions e = run $ evalState @(Map Name Nat) mempty do
     return (Named v n, x)
 
 toContainer :: DataContext -> Mono -> Value -> Container
-toContainer dataContext t = (uncurry Container . extract . computePositions) . poly dataContext t
+toContainer dataContext t = (uncurry Container . withdraw . computePositions) . poly dataContext t
 
 fromContainer :: Container -> Value
 fromContainer Container { shape, elements } = case inject elements shape of

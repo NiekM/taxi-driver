@@ -1,11 +1,9 @@
 module Utils
   ( altMap
-  , mapEither
-  , extract, inject
-  , ordered
+  , withdraw, inject
   , gather
   , nubOn
-  , vacant
+  , vacate
   , enumerate
   ) where
 
@@ -21,18 +19,11 @@ import Base
 altMap :: (Foldable f, Alternative m) => (a -> m b) -> f a -> m b
 altMap f = getAlt . foldMap (Alt . f)
 
-mapEither :: (a -> Either b c) -> [a] -> ([b], [c])
-mapEither f = partitionEithers . fmap f
-
-extract :: (Traversable f, Ord k) => f (k, v) -> (f k, Map k v)
-extract = swap . traverse \(x, y) -> (Map.singleton x y, x)
+withdraw :: (Traversable f, Ord k) => f (k, v) -> (f k, Map k v)
+withdraw = swap . traverse \(x, y) -> (Map.singleton x y, x)
 
 inject :: (Traversable f, Ord k) => Map k v -> f k -> Maybe (f v)
 inject m = traverse (`Map.lookup` m)
-
-ordered :: Ord a => [a] -> Bool
-ordered [] = True
-ordered (x:xs) = and $ zipWith (<=) (x:xs) xs
 
 gather :: Ord k => [(k, v)] -> Map k (NonEmpty v)
 gather xs = Map.fromList $ NonEmpty.groupAllWith fst xs <&> \ys ->
@@ -41,8 +32,8 @@ gather xs = Map.fromList $ NonEmpty.groupAllWith fst xs <&> \ys ->
 nubOn :: Ord b => (a -> b) -> [a] -> [a]
 nubOn f = map snd . sortOn fst . map NonEmpty.head . NonEmpty.groupAllWith (f . snd) . zip [0 :: Int ..]
 
-vacant :: Traversable f => f a -> Maybe (f Void)
-vacant = traverse $ const Nothing
+vacate :: Traversable f => f a -> Maybe (f Void)
+vacate = traverse $ const Nothing
 
 enumerate :: Traversable t => t a -> t (Nat, a)
 enumerate t = run $ evalState @Nat 0 do

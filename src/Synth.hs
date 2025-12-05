@@ -103,7 +103,7 @@ synthesizeAll args problem = runSearch searchSpace & mapMaybe
     toExtract :: Filling -> Extract
     toExtract filling =
       let normalized = normalize filling
-      in case vacant normalized of
+      in case vacate normalized of
         Nothing -> Unfinished normalized
         Just program -> Finished program
 
@@ -134,7 +134,7 @@ synthesize args problem = case dropFailures $ runSearch searchSpace of
     toExtract :: Filling -> Extract
     toExtract filling =
       let normalized = normalize filling
-      in case vacant normalized of
+      in case vacate normalized of
         Nothing -> Unfinished normalized
         Just program -> Finished program
 

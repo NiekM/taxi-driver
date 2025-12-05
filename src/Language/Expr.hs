@@ -352,7 +352,6 @@ instance (ToExpr l h a, ToExpr l h b) => ToExpr l h (a, b) where
 instance (ToExpr l h a, ToExpr l h b, ToExpr l h c) => ToExpr l h (a, b, c) where
   toExpr _ (x, y, z) = Tuple [toExpr _ x, toExpr _ y, toExpr _ z]
 
--- instance ToExpr l h ()
 instance ToExpr l h Bool
 instance ToExpr l h Ordering
 instance ToExpr l h a => ToExpr l h (Maybe a)
@@ -429,7 +428,6 @@ instance (FromExpr l h a, FromExpr l h b, FromExpr l h c) => FromExpr l h (a, b,
     Tuple [x, y, z] -> liftA3 (,,) (fromExpr x) (fromExpr y) (fromExpr z)
     _ -> undefined
 
--- instance FromExpr l h ()
 instance FromExpr l h Bool
 instance FromExpr l h Ordering
 instance FromExpr l h a => FromExpr l h (Maybe a)

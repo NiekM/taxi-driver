@@ -27,8 +27,6 @@ where
 
 import Base hiding (repeat, replicate)
 import Base qualified
--- import Control.Carrier.Error.Either
--- import Control.Carrier.Reader
 import Control.Effect.Fresh.Named
 import Control.Effect.Weight
 import Data.List qualified as List

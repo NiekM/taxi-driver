@@ -1,0 +1,8 @@
+partitionEithers : {xs : List (Either a b)} -> (List a, List b)
+partitionEithers [] = ([], [])
+partitionEithers [Left 1] = ([1], [])
+partitionEithers [Right 2] = ([], [2])
+partitionEithers [Left 2, Left 3] = ([2,3], [])
+partitionEithers [Right 4, Right 5] = ([], [4,5])
+partitionEithers [Left 3, Right 4] = ([3], [4])
+partitionEithers [Right 2, Left 1] = ([1], [2])

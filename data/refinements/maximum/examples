@@ -1,0 +1,10 @@
+maximum [] = Nothing
+maximum [1] = Just 1
+maximum [1, 1] = Just 1
+maximum [2, 1] = Just 2
+maximum [1, 1, 1] = Just 1
+maximum [1, 2, 1] = Just 2
+maximum [2, 1, 1] = Just 2
+maximum [2, 2, 1] = Just 2
+maximum [3, 2, 1] = Just 3
+maximum [4, 2, 1] = Just 4

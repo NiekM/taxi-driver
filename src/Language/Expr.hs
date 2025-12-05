@@ -361,6 +361,9 @@ toValue t = toExpr t
 instance ToExpr l h (Expr l h) where
   toExpr _ = id
 
+instance ToExpr l h Int where
+  toExpr _ = Lit . MkInt
+
 instance ToExpr l h Nat where
   toExpr _ 0 = Zero
   toExpr _ n = Succ $ toExpr _ (n - 1)

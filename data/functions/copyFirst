@@ -1,0 +1,5 @@
+copyFirst : {xs : List a} -> List a
+copyFirst [] = []
+copyFirst [1] = [1]
+copyFirst [1,2] = [1,1]
+copyFirst [1,2,3] = [1,1,1]

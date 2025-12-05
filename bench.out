@@ -1,0 +1,299 @@
+Previous benchmark?
+-------- Shape complete ----------
+append     satisfiable     159 ms
+concat     satisfiable     126 ms
+drop       unsatisfiable    45 ms
+head       satisfiable      33 ms
+index      unsatisfiable    39 ms
+init       unsatisfiable    31 ms
+last       satisfiable      31 ms
+length     satisfiable      23 ms
+null       satisfiable      20 ms
+prepend    satisfiable     149 ms
+reverse    satisfiable      57 ms
+splitAt    satisfiable     384 ms
+tail       unsatisfiable    31 ms
+take       satisfiable      83 ms
+unzip      satisfiable     126 ms
+zip        satisfiable     128 ms
+
+All
+  fold detection
+    simple
+      append           (success):   430  μs ±  40 μs
+      concat           (success):   505  μs ±  27 μs
+      drop             (failure):   248  μs ±  22 μs
+      head             (success):   221  μs ±  11 μs
+      index            (failure):   221  μs ±  11 μs
+      init             (failure):   247  μs ±  24 μs
+      last             (success):   292  μs ±  23 μs
+      length           (success):   164  μs ±  11 μs
+      null             (success):   186  μs ±  11 μs
+      prepend          (success):   430  μs ±  22 μs
+      reverse          (success):   263  μs ±  26 μs
+      splitAt          (success):   368  μs ±  25 μs
+      tail             (failure):   147  μs ±  11 μs
+      take             (success):   392  μs ±  29 μs
+      unzip            (success):   323  μs ±  21 μs
+      zip              (success):   302  μs ±  22 μs
+    extra
+      cartesian        (success):   1.03 ms ±  58 μs
+      copyFirst        (success):   207  μs ±  12 μs
+      copyLast         (success):   209  μs ±  12 μs
+      shiftl           (success):   308  μs ±  22 μs
+      shiftr           (success):   311  μs ±  26 μs
+      partition        (success):   345  μs ±  21 μs
+    trees
+      breadthFirst     (failure):   836  μs ±  24 μs
+      depth            (success):   513  μs ±  34 μs
+      inorder          (success):   1.12 ms ± 101 μs
+      levels           (success):   1.10 ms ± 101 μs
+      mirror           (success):   483  μs ±  23 μs
+      size             (success):   609  μs ±  48 μs
+    eq
+      compress         (success):   705  μs ±  42 μs
+      group            (success):   631  μs ±  49 μs
+      elem             (success):   682  μs ±  56 μs
+      elemIndex        (success):   454  μs ±  22 μs
+      nub              (success):   431  μs ±  29 μs
+      union            (failure):   547  μs ±  47 μs
+    ord
+      insert           (success):   541  μs ±  47 μs
+      maximum          (success):   583  μs ±  43 μs
+      ordNub           (failure):   375  μs ±  22 μs
+      pivot            (success):   707  μs ±  46 μs
+      sort             (success):   543  μs ±  43 μs
+      sorted           (failure):   520  μs ±  46 μs
+  synthesis
+    no feasibility
+      simple
+        append         (success):   1.19 ms ±  46 μs
+        concat         (success):   3.53 ms ± 195 μs
+        drop           (overfit):   3.99 ms ± 365 μs
+        head           (success):   302  μs ±  23 μs
+        index          (overfit):   13.8 ms ± 1.1 ms
+        init           (success):   23.2 ms ± 1.8 ms
+        last           (success):   1.56 ms ± 112 μs
+        length         (success):   299  μs ±  22 μs
+        null           (success):   233  μs ±  21 μs
+        prepend        (success):   1.19 ms ± 101 μs
+        reverse        (success):   3.12 ms ± 202 μs
+        splitAt        (overfit):   228  ms ± 7.0 ms
+        tail           (success):   452  μs ±  30 μs
+        take           (overfit):   124  ms ± 5.8 ms
+        unzip          (success):   3.57 ms ± 177 μs
+        zip            (overfit):   21.4 ms ± 1.7 ms
+      extra
+        cartesian      (timeout):   4.13 ns ± 348 ps
+        copyFirst      (success):   1.68 ms ±  86 μs
+        copyLast       (success):   2.31 ms ± 134 μs
+        shiftl         (success):   6.78 ms ± 421 μs
+        shiftr         (success):   12.4 ms ± 760 μs
+        partition      (success):   238  ms ±  10 ms
+      trees
+        breadthFirst   (timeout):   4.13 ns ± 322 ps
+        depth          (overfit):   4.36 ms ± 403 μs
+        inorder        (success):   8.31 ms ± 804 μs
+        levels         (timeout):   4.17 ns ± 258 ps
+        mirror         (success):   689  μs ±  52 μs
+        size           (success):   3.69 ms ± 184 μs
+      eq
+        compress       (success):   107  ms ± 8.6 ms
+        group          (timeout):   4.14 ns ± 330 ps
+        elem           (success):   798  μs ±  44 μs
+        elemIndex      (success):   685  ms ±  25 ms
+        nub            (success):   7.52 ms ± 385 μs
+        union          (timeout):   4.13 ns ± 336 ps
+      ord
+        insert         (overfit):   135  ms ± 4.3 ms
+        maximum        (success):   5.77 ms ± 349 μs
+        ordNub         (timeout):   4.12 ns ± 346 ps
+        pivot          (success):   73.5 ms ± 5.6 ms
+        sort           (timeout):   4.13 ns ± 322 ps
+        sorted         (overfit):   36.2 ms ± 2.8 ms
+    feasibility
+      simple
+        append         (success):   1.53 ms ± 149 μs
+        concat         (success):   3.79 ms ± 211 μs
+        drop           (overfit):   2.63 ms ± 226 μs
+        head           (success):   350  μs ±  24 μs
+        index          (overfit):   11.3 ms ± 859 μs
+        init           (success):   9.10 ms ± 874 μs
+        last           (success):   1.25 ms ± 122 μs
+        length         (success):   341  μs ±  22 μs
+        null           (success):   269  μs ±  26 μs
+        prepend        (success):   1.53 ms ±  86 μs
+        reverse        (success):   3.18 ms ± 169 μs
+        splitAt        (overfit):   232  ms ±  12 ms
+        tail           (success):   292  μs ±  11 μs
+        take           (overfit):   115  ms ± 3.1 ms
+        unzip          (success):   3.85 ms ± 330 μs
+        zip            (overfit):   22.7 ms ± 1.8 ms
+      extra
+        cartesian      (timeout):   4.14 ns ± 326 ps
+        copyFirst      (success):   1.83 ms ± 112 μs
+        copyLast       (success):   2.41 ms ± 224 μs
+        shiftl         (success):   6.45 ms ± 522 μs
+        shiftr         (success):   11.6 ms ± 739 μs
+        partition      (success):   242  ms ± 6.1 ms
+      trees
+        breadthFirst   (timeout):   4.12 ns ± 342 ps
+        depth          (overfit):   4.35 ms ± 239 μs
+        inorder        (success):   8.55 ms ± 367 μs
+        levels         (timeout):   4.12 ns ± 336 ps
+        mirror         (success):   928  μs ±  45 μs
+        size           (success):   3.74 ms ± 260 μs
+      eq
+        compress       (success):   29.3 ms ± 2.5 ms
+        group          (timeout):   4.12 ns ± 354 ps
+        elem           (success):   944  μs ±  42 μs
+        elemIndex      (success):   654  ms ±  16 ms
+        nub            (success):   7.47 ms ± 486 μs
+        union          (timeout):   4.14 ns ± 344 ps
+      ord
+        insert         (overfit):   128  ms ± 7.5 ms
+        maximum        (success):   5.40 ms ± 451 μs
+        ordNub         (timeout):   4.12 ns ± 350 ps
+        pivot          (success):   71.6 ms ± 5.4 ms
+        sort           (timeout):   4.12 ns ± 322 ps
+        sorted         (overfit):   35.1 ms ± 3.0 ms
+    coverage
+      simple
+        append         (success):   1.54 ms ±  65 μs
+        concat         (success):   2.86 ms ± 113 μs
+        drop           (overfit):   2.64 ms ± 249 μs
+        head           (success):   274  μs ±  11 μs
+        index          (overfit):   11.5 ms ± 933 μs
+        init           (success):   8.21 ms ± 666 μs
+        last           (success):   349  μs ±  26 μs
+        length         (success):   305  μs ±  28 μs
+        null           (success):   237  μs ±  12 μs
+        prepend        (success):   1.54 ms ± 107 μs
+        reverse        (success):   1.54 ms ±  90 μs
+        splitAt        (overfit):   235  ms ± 9.5 ms
+        tail           (success):   294  μs ±  11 μs
+        take           (overfit):   117  ms ± 7.2 ms
+        unzip          (success):   3.34 ms ±  99 μs
+        zip            (overfit):   22.5 ms ± 1.9 ms
+      extra
+        cartesian      (timeout):   4.12 ns ± 348 ps
+        copyFirst      (success):   1.34 ms ± 130 μs
+        copyLast       (success):   1.28 ms ± 116 μs
+        shiftl         (success):   3.95 ms ± 338 μs
+        shiftr         (success):   9.50 ms ± 879 μs
+        partition      (success):   107  ms ± 7.3 ms
+      trees
+        breadthFirst   (timeout):   4.10 ns ± 172 ps
+        depth          (overfit):   4.21 ms ± 342 μs
+        inorder        (success):   8.44 ms ± 367 μs
+        levels         (timeout):   4.40 ns ± 344 ps
+        mirror         (success):   886  μs ±  85 μs
+        size           (success):   3.11 ms ± 259 μs
+      eq
+        compress       (success):   16.9 ms ± 1.5 ms
+        group          (timeout):   4.40 ns ± 340 ps
+        elem           (success):   824  μs ±  57 μs
+        elemIndex      (success):   226  ms ± 5.8 ms
+        nub            (success):   1.83 ms ± 106 μs
+        union          (timeout):   4.34 ns ± 388 ps
+      ord
+        insert         (overfit):   40.1 ms ± 1.6 ms
+        maximum        (success):   681  μs ±  43 μs
+        ordNub         (timeout):   4.41 ns ± 432 ps
+        pivot          (success):   5.26 ms ± 508 μs
+        sort           (timeout):   4.40 ns ± 334 ps
+        sorted         (overfit):   36.5 ms ± 3.4 ms
+    branching
+      simple
+        append         (success):   1.38 ms ±  84 μs
+        concat         (success):   2.35 ms ± 217 μs
+        drop           (overfit):   2.17 ms ± 189 μs
+        head           (success):   320  μs ±  11 μs
+        index          (overfit):   5.43 ms ± 312 μs
+        init           (success):   4.46 ms ± 383 μs
+        last           (success):   701  μs ±  49 μs
+        length         (success):   313  μs ±  23 μs
+        null           (success):   277  μs ±  17 μs
+        prepend        (success):   1.38 ms ±  93 μs
+        reverse        (success):   1.57 ms ±  84 μs
+        splitAt        (overfit):   200  ms ± 2.8 ms
+        tail           (success):   297  μs ±  26 μs
+        take           (overfit):   30.0 ms ± 2.2 ms
+        unzip          (success):   1.84 ms ± 184 μs
+        zip            (overfit):   8.59 ms ± 656 μs
+      extra
+        cartesian      (overfit):   913  ms ± 8.5 ms
+        copyFirst      (success):   964  μs ±  45 μs
+        copyLast       (success):   1.40 ms ±  89 μs
+        shiftl         (overfit):   102  ms ± 5.0 ms
+        shiftr         (success):   7.28 ms ± 540 μs
+        partition      (success):   113  ms ± 6.2 ms
+      trees
+        breadthFirst   (timeout):   4.33 ns ± 388 ps
+        depth          (overfit):   2.74 ms ± 268 μs
+        inorder        (success):   5.31 ms ± 375 μs
+        levels         (timeout):   4.39 ns ± 350 ps
+        mirror         (success):   834  μs ±  45 μs
+        size           (success):   2.45 ms ± 208 μs
+      eq
+        compress       (success):   23.0 ms ± 2.0 ms
+        group          (timeout):   4.42 ns ± 364 ps
+        elem           (success):   1.02 ms ±  90 μs
+        elemIndex      (success):   30.1 ms ± 1.5 ms
+        nub            (success):   4.39 ms ± 227 μs
+        union          (timeout):   4.41 ns ± 350 ps
+      ord
+        insert         (overfit):   55.4 ms ± 2.2 ms
+        maximum        (success):   1.80 ms ± 168 μs
+        ordNub         (timeout):   4.36 ns ± 388 ps
+        pivot          (success):   43.0 ms ± 3.7 ms
+        sort           (timeout):   4.39 ns ± 348 ps
+        sorted         (overfit):   22.9 ms ± 1.8 ms
+    all settings
+      simple
+        append         (success):   1.36 ms ±  86 μs
+        concat         (success):   1.78 ms ± 148 μs
+        drop           (overfit):   2.20 ms ± 121 μs
+        head           (success):   291  μs ±  23 μs
+        index          (overfit):   5.47 ms ± 379 μs
+        init           (success):   4.05 ms ± 196 μs
+        last           (success):   368  μs ±  21 μs
+        length         (success):   319  μs ±  27 μs
+        null           (success):   253  μs ±  25 μs
+        prepend        (success):   1.38 ms ±  93 μs
+        reverse        (success):   1.34 ms ±  84 μs
+        splitAt        (overfit):   204  ms ± 3.3 ms
+        tail           (success):   296  μs ±  29 μs
+        take           (overfit):   30.0 ms ± 2.5 ms
+        unzip          (success):   1.35 ms ±  86 μs
+        zip            (overfit):   8.87 ms ± 343 μs
+      extra
+        cartesian      (overfit):   393  ms ± 7.5 ms
+        copyFirst      (success):   926  μs ±  88 μs
+        copyLast       (success):   1.13 ms ±  91 μs
+        shiftl         (overfit):   71.3 ms ± 5.0 ms
+        shiftr         (success):   4.62 ms ± 341 μs
+        partition      (success):   53.8 ms ± 1.4 ms
+      trees
+        breadthFirst   (timeout):   4.39 ns ± 344 ps
+        depth          (overfit):   2.70 ms ± 247 μs
+        inorder        (success):   5.31 ms ± 337 μs
+        levels         (timeout):   4.38 ns ± 376 ps
+        mirror         (success):   806  μs ±  45 μs
+        size           (success):   2.38 ms ± 198 μs
+      eq
+        compress       (success):   12.8 ms ± 1.1 ms
+        group          (timeout):   4.38 ns ± 336 ps
+        elem           (success):   939  μs ±  85 μs
+        elemIndex      (success):   19.2 ms ± 1.6 ms
+        nub            (success):   1.55 ms ±  90 μs
+        union          (timeout):   4.39 ns ± 324 ps
+      ord
+        insert         (overfit):   23.8 ms ± 1.8 ms
+        maximum        (success):   684  μs ±  46 μs
+        ordNub         (timeout):   4.39 ns ± 328 ps
+        pivot          (success):   3.57 ms ± 249 μs
+        sort           (timeout):   4.39 ns ± 320 ps
+        sorted         (overfit):   23.6 ms ± 1.6 ms
+
+All 240 tests passed (61.89s)

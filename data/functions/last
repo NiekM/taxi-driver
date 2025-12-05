@@ -1,0 +1,5 @@
+last : {xs : List a} -> Maybe a
+last [] = Nothing
+last [1] = Just 1
+last [2, 1] = Just 1
+last [3, 2, 1] = Just 1

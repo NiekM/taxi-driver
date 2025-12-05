@@ -1,0 +1,5 @@
+length : {xs : List a} -> Nat
+length [] = 0
+length [1] = 1
+length [2, 1] = 2
+length [3, 2, 1] = 3

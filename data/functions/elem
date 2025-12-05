@@ -1,0 +1,12 @@
+elem : Eq a => {x : a, xs : List a} -> Bool
+elem 1 [] = False
+elem 1 [2] = False
+elem 1 [2,3] = False
+elem 1 [2,3,4] = False
+elem 1 [1] = True
+elem 1 [2,1] = True
+elem 1 [1,2] = True
+elem 1 [1,1] = True
+elem 1 [1,2,3] = True
+elem 1 [3,1,2] = True
+elem 1 [2,3,1] = True

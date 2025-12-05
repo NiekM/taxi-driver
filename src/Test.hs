@@ -10,6 +10,7 @@ import Data.Map qualified as Map
 import Data.List qualified as List
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (fromJust, catMaybes)
+import Data.Text qualified as Text
 import Data.Text.IO qualified as Text
 import System.IO.Unsafe qualified as Unsafe
 import System.Directory
@@ -20,8 +21,11 @@ import Control.Carrier.Reader
 import Control.Carrier.Choose.Church
 import Control.Carrier.Error.Either
 import Control.Effect.Fresh.Named
+import Control.Carrier.State.Strict
 import Data.String
 import Prettyprinter
+
+import Data.Tree.Binary
 
 import Base
 import Control.Effect.Search
@@ -75,11 +79,7 @@ instance (Pretty e, Pretty a) => Pretty (Either e a) where
 
 {-# NOINLINE benches #-}
 benches :: [Named Problem]
-benches = Unsafe.unsafePerformIO do
-  xs <- listDirectory "data/bench/"
-  forM (reverse xs) \name -> do
-    content <- Text.readFile $ "data/bench/" <> name
-    return $ parse content
+benches = Unsafe.unsafePerformIO loadAll
 
 getBench :: Name -> Named Problem
 getBench name = Named name . fromJust $ find name benches
@@ -184,3 +184,126 @@ tryOut problem = case synthesize def problem of
 -- Weird insert...
 myInsert :: Ord a => a -> [a] -> [a]
 myInsert x = foldr (\y r -> min x y : map (max y) r) [x]
+
+ofDepth :: Int -> [Tree () ()]
+ofDepth 0 = [Leaf ()]
+ofDepth n = [Node l () r | l <- ofDepth (n - 1), r <- ofDepth (n - 1)]
+  ++ [Node l () r | l <- ofDepth (n - 1), r <- upToDepth (n - 2)]
+  ++ [Node l () r | l <- upToDepth (n - 2), r <- ofDepth (n - 1)]
+
+upToDepth :: Int -> [Tree () ()]
+upToDepth n = [0 .. n] >>= ofDepth
+
+decorate :: Tree () () -> Tree Nat ()
+decorate = fst . go 0 where
+  go n (Leaf ()) = (Leaf (), n)
+  go n (Node l () r) = (Node x n y, k)
+    where
+      (x, m) = go (n + 1) l
+      (y, k) = go m r
+
+-- NOTE: levels does not work using tango, because the fold over the merged lists is never trace complete
+-- The reason this happens is that the lengths of lists returned by levels are increasing, and the first ones are always of length 1.
+-- It is not possible that the head of the lists contain more than 1 element.
+
+
+loadMaxRefinements :: IO [Named Problem]
+loadMaxRefinements = do
+  signatures <- Text.lines <$> Text.readFile "data/refinements/maximum/signatures"
+  examples <- Text.readFile "data/refinements/maximum/examples"
+  let combined = signatures <&> \signature -> signature <> "\n" <> examples
+  forM combined \p -> do
+    case lexParse (parser @(Named Problem)) p of
+      Nothing -> error "Failed to parse"
+      Just problem -> return problem
+
+loadDedupRefinements :: IO [Named Problem]
+loadDedupRefinements = do
+  signatures <- Text.lines <$> Text.readFile "data/refinements/dedup/signatures"
+  examples <- Text.readFile "data/refinements/dedup/examples"
+  let combined = signatures <&> \signature -> signature <> "\n" <> examples
+  forM combined \p -> do
+    case lexParse (parser @(Named Problem)) p of
+      Nothing -> error "Failed to parse"
+      Just problem -> return problem
+
+-- >>> ps <- loadDedupRefinements 
+-- >>> pretty . zip [1..] $ check datatypes . (.value) <$> ps
+-- <only 3, 4, and 5 are not contradictory>
+
+------- type abstractions --------
+
+ss :: [Nat] -> [Nat]
+ss = undefined
+
+oll :: Ord a => [a] -> [a]
+oll = undefined
+
+ell :: Eq a => [a] -> [a]
+ell = undefined
+
+ll :: [a] -> [a]
+ll = undefined
+
+aa :: a -> a
+aa = undefined
+
+ab :: a -> b
+ab = undefined
+
+ols :: Ord a => [a] -> [Nat]
+ols = undefined
+
+osl :: Ord a => [Nat] -> [a]
+osl = undefined
+
+els :: Eq a => [a] -> [Nat]
+els = undefined
+
+esl :: Eq a => [Nat] -> [a]
+esl = undefined
+
+ls :: [a] -> [Nat]
+ls = undefined
+
+sl :: [Nat] -> [a]
+sl = undefined
+
+ttt :: Nat -> Nat -> Nat
+ttt = undefined
+
+att :: a -> Nat -> Nat
+att = undefined
+
+tat :: Nat -> a -> Nat
+tat = undefined
+
+tta :: Nat -> Nat -> a
+tta = undefined
+
+aat :: a -> a -> Nat
+aat = undefined
+
+ata :: a -> Nat -> a
+ata = undefined
+
+taa :: Nat -> a -> a
+taa = undefined
+
+tt :: Nat -> Nat
+tt = ta
+
+ta :: Nat -> b
+ta = ab
+
+at :: a -> Nat
+at = ab
+
+class ABC where
+  abc :: a -> b -> c
+  aab :: a -> a -> b
+  aba :: a -> b -> a
+  baa :: b -> a -> a
+  aaa :: a -> a -> a
+
+z = let x = undefined in (x :: a -> a -> a)

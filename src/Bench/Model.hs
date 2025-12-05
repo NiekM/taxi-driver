@@ -90,7 +90,7 @@ last xs = Just $ List.last xs
 length :: [a] -> Nat
 length = List.genericLength
 
-longZip :: Monoid m => [m] -> [m] -> [m]
+longZip :: Semigroup m => [m] -> [m] -> [m]
 longZip xs [] = xs
 longZip [] ys = ys
 longZip (x:xs) (y:ys) = x <> y : longZip xs ys

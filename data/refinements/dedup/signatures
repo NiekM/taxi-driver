@@ -1,0 +1,8 @@
+dedup :          {xs : List a}   -> List a
+dedup :          {xs : a}        -> a
+dedup :          {xs : List Nat} -> List Nat
+dedup : Ord a => {xs : List a}   -> List a
+dedup : Eq  a => {xs : List a}   -> List a
+dedup :          {xs : List a}   -> List Nat
+dedup : Ord a => {xs : List a}   -> List Nat
+dedup : Eq  a => {xs : List a}   -> List Nat

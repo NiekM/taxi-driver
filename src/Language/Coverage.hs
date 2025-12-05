@@ -34,6 +34,7 @@ coveringShapes ctx = go []
             return $ Ctr c <$> xs
       Base Int -> Nothing
 
+-- TODO: rename to avoid confusion
 anywhere :: (a -> b -> [b]) -> (a -> b) -> a -> [b] -> [[b]]
 anywhere _ e x [] = [[e x]]
 anywhere f e x (y:ys) = (f x y ++ ys) : map (y:) (anywhere f e x ys)

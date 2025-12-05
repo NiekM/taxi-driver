@@ -17,8 +17,8 @@ module Tactic.Core
     (<|),
     firstOf,
     until,
-    anywhere,
-    anywhere2,
+    anywhereBiased,
+    anywhereBiased2,
     -- NOTE: Not sure about these
     getArg,
     binds,
@@ -126,16 +126,16 @@ until :: (Tactic sig m, Has (Catch TacticFailure) sig m) => m Filling -> m Filli
 until t u = t <| u >>> until t u
 
 -- | Apply a tactic to the first variable in scope that succeeds.
-anywhere :: (Tactic sig m) => (Name -> m a) -> m a
-anywhere tactic = do
+anywhereBiased :: (Tactic sig m) => (Name -> m a) -> m a
+anywhereBiased tactic = do
   vars <- asks variables
   case vars of
     [] -> throwError $ NotApplicable "no variable in scope"
     x : xs -> firstOf $ fmap tactic (x :| xs)
 
 -- | Apply a tactic to the first pair of variables in scope that succeeds.
-anywhere2 :: (Tactic sig m) => (Name -> Name -> m a) -> m a
-anywhere2 tactic = do
+anywhereBiased2 :: (Tactic sig m) => (Name -> Name -> m a) -> m a
+anywhereBiased2 tactic = do
   vars <- asks variables
   let pairs = [(x, y) | x <- vars, y <- vars, x < y]
   case pairs of

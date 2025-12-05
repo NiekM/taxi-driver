@@ -10,11 +10,11 @@ anyOf :: (Tactic sig m, Has Choose sig m) => [m a] -> m a
 anyOf [] = throwError $ NotApplicable "out of options"
 anyOf xs = foldr1 (<|>) xs
 
-everywhere :: (Tactic sig m, Has Choose sig m) => (Name -> m a) -> m a
-everywhere tactic = tactic =<< anyOf . map pure =<< asks variables
+anywhere :: (Tactic sig m, Has Choose sig m) => (Name -> m a) -> m a
+anywhere tactic = tactic =<< anyOf . map pure =<< asks variables
 
-everywhere2 :: (Tactic sig m, Has Choose sig m) => (Name -> Name -> m a) -> m a
-everywhere2 tactic = do
+anywhere2 :: (Tactic sig m, Has Choose sig m) => (Name -> Name -> m a) -> m a
+anywhere2 tactic = do
   vars <- asks variables
   x <- anyOf $ map pure vars
   y <- anyOf $ map pure vars

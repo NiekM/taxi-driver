@@ -78,20 +78,3 @@ synthesisSucceeds :: [Named (Problem, Model)] -> TestTree
 synthesisSucceeds problems = testGroup "synthesis" $ problems <&> \(Named name (problem, model)) ->
   testProperty (Text.unpack name.getName) . withMaxSize 25 $ testSynthesis args problem model
   where args = def { settings = defaultSettings { removeIrrelevant = False } }
-
-  -- TODO:
-  -- [x] checkRelation (computeRelation ...) == True
-  -- [x] applyRule ... (checkExample ...) == ...
-  -- [ ] reconstruct . reconstruct == reconstruct
-  -- [ ] normalize . normalize == normalize
-  -- [x] (normalize :: Value -> Value) == id
-  -- [?] `greedy` always succeeds
-  -- [ ] tactics "preserve" totality (the total amount of missing cases should stay the same)
-  -- [ ] isMap ==> isFold
-  -- [ ] isFilter ==> isFold
-  -- [ ] reversible ==> isFold
-  -- [ ] preserveRealizable introCtr
-  -- [ ] preserveRealizable introTuple
-  -- [ ] preserveRealizable (anywhere elim)
-  -- [ ] preserveRealizable (anywhere2 elimEq)
-  -- [ ] preserveRealizable (anywhere2 elimOrd)

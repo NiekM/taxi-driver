@@ -188,10 +188,10 @@ softConditional n t u = catchError @TacticFailure (do
   pure x <|> (weigh n >> u)) $ const u
 
 step :: Synth sig m => m Filling
-step = anywhere assume <| anyOf
-  [ weigh 3 >> everywhere eliminators
+step = anywhereBiased assume <| anyOf
+  [ weigh 3 >> anywhere eliminators
   -- BUG: currently we can keep applying the same elimEq/elimOrd on the same variables...
-  , everywhere2 relations
+  , anywhere2 relations
   , constructors
   ]
 
@@ -199,7 +199,7 @@ auto :: Synth sig m => m Filling
 auto = repeat (weigh 1 >> step)
 
 simple :: Synth sig m => m Filling
-simple = (anywhere assume <| constructors) <|> (weigh 2 >> everywhere2 relations)
+simple = (anywhereBiased assume <| constructors) <|> (weigh 2 >> anywhere2 relations)
 
 complex :: Synth sig m => Name -> m Filling
 complex x = ((Tactic.map x <| Tactic.filter x <| Tactic.fold x) <|> elim x) <| none
@@ -207,7 +207,7 @@ complex x = ((Tactic.map x <| Tactic.filter x <| Tactic.fold x) <|> elim x) <| n
 -- I thought this might synthesize group, but it still overfits.
 -- This is because none of the examples have more than 2 times the same value after another.
 staged :: Synth sig m => m Filling
-staged = replicate 3 (everywhere complex) >>> repeat simple
+staged = replicate 3 (anywhere complex) >>> repeat simple
 
 -- For synthesizing e.g. insert
 --
@@ -219,9 +219,9 @@ staged = replicate 3 (everywhere complex) >>> repeat simple
 withPara :: Synth sig m => m Filling
 withPara = repeat (weigh 1 >> paraStep)
   where
-    paraStep = anywhere assume <| anyOf
-      [ weigh 3 >> everywhere \x -> eliminators x <|> Tactic.para x
-      , everywhere2 relations
+    paraStep = anywhereBiased assume <| anyOf
+      [ weigh 3 >> anywhere \x -> eliminators x <|> Tactic.para x
+      , anywhere2 relations
       , constructors
       ]
 
@@ -231,38 +231,38 @@ withPara = repeat (weigh 1 >> paraStep)
 -- 3. add correct input-output to examples, repeat (from 2)
 
 -- ordNub can be defined in terms of para
--- > Success ((_, Finished p) :|_) = synthesize def { tactic = Tactic.fold "xs" >>> Tactic.para "x2" >>> Tactic.anywhere2 elimOrd >>> auto } "ordNub"
+-- > Success ((_, Finished p) :|_) = synthesize def { tactic = Tactic.fold "xs" >>> Tactic.para "x2" >>> Tactic.anywhereBiased2 elimOrd >>> auto } "ordNub"
 -- > quickCheck \xs -> List.nub (List.sort xs) == interpret @([Nat] -> [Nat]) p xs
 -- +++ OK, passed 100 tests.
 --
 -- same for sort!
--- > Success ((_, Finished p) :|_) = synthesize def { tactic = Tactic.fold "xs" >>> Tactic.para "x2" >>> Tactic.anywhere2 elimOrd >>> auto } "sort"
+-- > Success ((_, Finished p) :|_) = synthesize def { tactic = Tactic.fold "xs" >>> Tactic.para "x2" >>> Tactic.anywhereBiased2 elimOrd >>> auto } "sort"
 -- > quickCheck \xs -> List.sort xs == interpret @([Nat] -> [Nat]) p xs
 -- +++ OK, passed 100 tests.
 --
 
 -- Very slow, but succeeds
--- > Success ((_,Finished p):|_) = synthesize def { tactic = Tactic.fold "xs" >>> Tactic.elim "x2" >>* [none, rerealize hole] >>> Tactic.elim "x5" >>* [anywhere2 elimEq] >>> auto } "group"
+-- > Success ((_,Finished p):|_) = synthesize def { tactic = Tactic.fold "xs" >>> Tactic.elim "x2" >>* [none, rerealize hole] >>> Tactic.elim "x5" >>* [anywhereBiased2 elimEq] >>> auto } "group"
 -- > quickCheck \xs -> interpret @([Nat] -> [[Nat]]) p xs == List.group xs
 -- +++ OK, passed 100 tests
 
 -- encode (i.o. group)
--- $ synthesize def { tactic = Tactic.fold "xs" >>> Tactic.elim "x2" >>* [none, rerealize hole] >>> anywhere2 elimEq >>> introCtr >>> auto} "encode"
+-- $ synthesize def { tactic = Tactic.fold "xs" >>> Tactic.elim "x2" >>* [none, rerealize hole] >>> anywhereBiased2 elimEq >>> introCtr >>> auto} "encode"
 
 -- Paramorphisms:
 --
--- > PROGRAM p = synthesize def { tactic = anywhere Tactic.para >>> auto } "insert"
+-- > PROGRAM p = synthesize def { tactic = anywhereBiased Tactic.para >>> auto } "insert"
 -- > quickCheck \x (Sorted xs) -> interpret @(Nat -> [Nat] -> [Nat]) p x xs == List.insert x xs
 -- +++ OK, passed 100 tests.
 --
--- > PROGRAM p = synthesize def { tactic = anywhere Tactic.para >>> auto } "sorted"
+-- > PROGRAM p = synthesize def { tactic = anywhereBiased Tactic.para >>> auto } "sorted"
 -- > quickCheck \xs -> interpret @([Nat] -> Bool) p xs == (xs == List.sort xs)
 -- +++ OK, passed 100 tests.
 --
--- > PROGRAM p = synthesize def { tactic = anywhere Tactic.fold >>> anywhere Tactic.para >>> auto } "sort"
+-- > PROGRAM p = synthesize def { tactic = anywhereBiased Tactic.fold >>> anywhereBiased Tactic.para >>> auto } "sort"
 -- > quickCheck \xs -> interpret @([Nat] -> [Nat]) p xs == List.sort xs
 -- +++ OK, passed 100 tests.
 --
--- > PROGRAM p = synthesize def { tactic = anywhere Tactic.fold >>> anywhere Tactic.para >>> auto } "ordNub"
+-- > PROGRAM p = synthesize def { tactic = anywhereBiased Tactic.fold >>> anywhereBiased Tactic.para >>> auto } "ordNub"
 -- > quickCheck \xs -> interpret @([Nat] -> [Nat]) p xs == List.nub (List.sort xs)
 -- +++ OK, passed 100 tests.

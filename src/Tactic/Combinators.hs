@@ -3,7 +3,7 @@ module Tactic.Combinators where
 import Control.Effect.Choose
 
 import Base hiding (replicate, repeat, (<|>))
-import Language.Problem
+import Language.Spec
 import Tactic.Core
 
 anyOf :: (Tactic sig m, Has Choose sig m) => [m a] -> m a

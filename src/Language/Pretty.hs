@@ -19,7 +19,7 @@ import Language.Container
 import Language.Container.Morphism
 import Language.Container.Relation
 import Language.Coverage
-import Language.Problem
+import Language.Spec
 
 statements :: [Doc ann] -> Doc ann
 statements = concatWith \x y -> x <> flatAlt line "; " <> y
@@ -158,11 +158,11 @@ instance Pretty (Named DataDef) where
 instance Pretty DataContext where
   pretty (DataContext datatypes) = statements $ map pretty datatypes
 
-instance Pretty Problem where
+instance Pretty Spec where
   pretty = prettyNamed "_"
 
-instance Pretty (Named Problem) where
-  pretty (Named name (Problem sig exs)) = statements $
+instance Pretty (Named Spec) where
+  pretty (Named name (Spec sig exs)) = statements $
     prettyNamed name sig : map (prettyNamed name) exs
 
 instance Pretty Arg where

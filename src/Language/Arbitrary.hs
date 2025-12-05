@@ -12,7 +12,7 @@ import Test.QuickCheck hiding (total)
 import Language.Type
 import Language.Container
 import Language.Expr
-import Language.Problem
+import Language.Spec
 
 (|:) :: [a] -> a -> NonEmpty a
 xs |: x = foldr NonEmpty.cons (pure x) xs
@@ -109,8 +109,8 @@ example signature = scale (`div` length signature.inputs) do
   output <- arg signature.output
   return $ Example inputs output
 
-problem :: [Name] -> Gen Problem
-problem free = do
+spec :: [Name] -> Gen Spec
+spec free = do
   signature <- sig free
   len <- frequency . map (second pure) $
     [ (2, 1)
@@ -120,4 +120,4 @@ problem free = do
     , (1, 5)
     ]
   examples <- vectorOf len $ example signature
-  return $ Problem signature examples
+  return $ Spec signature examples

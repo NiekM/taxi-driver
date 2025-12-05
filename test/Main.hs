@@ -16,7 +16,7 @@ import Language.Arbitrary qualified as Arbitrary
 import Language.Container.Relation
 import Language.Container.Morphism
 import Language.Expr
-import Language.Problem
+import Language.Spec
 import Language.Prelude
 import Tactic
 import Synth
@@ -74,6 +74,6 @@ main = do
     , ruleConsistency
     ]
 
-synthesisSucceeds :: [Named (Problem, Model)] -> TestTree
+synthesisSucceeds :: [Named (Spec, Model)] -> TestTree
 synthesisSucceeds problems = testGroup "synthesis" $ problems <&> \(Named name (problem, model)) ->
   testProperty (Text.unpack name.getName) . withMaxSize 25 $ testSynthesis def problem model

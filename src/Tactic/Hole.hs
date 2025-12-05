@@ -1,13 +1,11 @@
 module Tactic.Hole (hole) where
 
-import Data.Set qualified as Set
-
 import Control.Carrier.Reader
 import Control.Effect.Fresh.Named
 
 import Base
 import Language.Expr
-import Language.Problem
+import Language.Spec
 import Language.Type
 import Tactic.Core
 
@@ -21,7 +19,7 @@ hole = do
     , applyWhen tacticOptions.removeDuplicates $ local removeIdenticalInputs
     ] none
 
-removeIdenticalInputs :: Problem -> Problem
+removeIdenticalInputs :: Spec -> Spec
 removeIdenticalInputs = onArgs \args ->
   Args (nubOn (.value) args.inputs) args.output
 

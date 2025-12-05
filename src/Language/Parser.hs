@@ -13,7 +13,7 @@ import Data.Set qualified as Set
 import Base hiding (optional, some, many, (<|>))
 import Language.Type
 import Language.Expr
-import Language.Problem
+import Language.Spec
 
 type Lexer = Parsec Void Text
 
@@ -237,17 +237,17 @@ instance Parse (Named Example) where
   parser = Named <$> identifier <*> do
     Example <$> spacedExprUntil (Operator "=") <* op "=" <*> parser
 
-instance Parse Problem where
-  parser = (.value) <$> parser @(Named Problem)
+instance Parse Spec where
+  parser = (.value) <$> parser @(Named Spec)
 
-instance Parse (Named Problem) where
+instance Parse (Named Spec) where
   parser = do
     Named name signature <- parser
     bs <- statements parser
     examples <- forM bs \(Named name' b) -> do
       guard $ name == name'
       return b
-    return $ Named name Problem { signature, examples }
+    return $ Named name Spec { signature, examples }
 
 instance Parse Void where
   parser = empty

@@ -33,7 +33,7 @@ import Data.List qualified as List
 import Language.Container.Morphism
 import Language.Expr
 import Language.Pretty ()
-import Language.Problem
+import Language.Spec
 import Language.Type
 import Tactic.Options
 import Utils
@@ -55,13 +55,13 @@ instance Pretty TacticFailure where
 type Tactic sig m =
   ( Has (Reader DataContext) sig m
   , Has (Reader TacticOptions) sig m
-  , Has (Reader Problem) sig m
+  , Has (Reader Spec) sig m
   , Has Fresh sig m
   , Has Weight sig m
   , Has (Error TacticFailure) sig m
   )
 
-type Filling = Program Problem
+type Filling = Program Spec
 
 none :: (Tactic sig m) => m Filling
 none = Hole <$> ask
@@ -75,12 +75,12 @@ assume name = do
 
 exact :: (Tactic sig m) => Program Void -> Mono -> m Filling
 exact expr t = do
-  problem <- ask
+  spec <- ask
   out <- asks outputArg
   when (t /= out.mono) $ throwError $ NotApplicable "expression has incorrect typ"
-  case evaluate expr problem of
+  case evaluate expr spec of
     Nothing -> throwError $ NotApplicable "expression does not evaluate to a Value"
-    Just result | result == (outputArg problem).terms -> return $ vacuous expr
+    Just result | result == (outputArg spec).terms -> return $ vacuous expr
     _ -> throwError $ NotApplicable "expression does not match output"
 
 infixl 3 >>>

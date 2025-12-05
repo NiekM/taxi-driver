@@ -8,42 +8,42 @@ import Data.Text.IO qualified as Text
 import System.Directory
 import Test.QuickCheck (Property, discard, Arbitrary, property, witness)
 
-import Language.Problem
+import Language.Spec
 import Language.Parser
 import Language.Expr
 import Synth
 
 import Bench.Model qualified as Model
 
-trySynthesize :: SynthOptions -> Problem -> Maybe (Program Void)
-trySynthesize args problem = case synthesize args problem of
+trySynthesize :: SynthOptions -> Spec -> Maybe (Program Void)
+trySynthesize args spec = case synthesize args spec of
   Failure Depleted -> Nothing
   Failure Exhausted -> Nothing
   Success ((_, Unfinished _filling) :| _) -> Nothing
   Success ((_, Finished program) :| _)
-    | testProblem program problem -> Just program
+    | testSpec program spec -> Just program
     | otherwise -> Nothing
 
-testSynthesis :: SynthOptions -> Problem -> Model -> Property
-testSynthesis args problem (Model model) = case trySynthesize args problem of
+testSynthesis :: SynthOptions -> Spec -> Model -> Property
+testSynthesis args spec (Model model) = case trySynthesize args spec of
   Nothing -> discard
   Just program -> comparison model (interpret program)
 
-loadProblem :: Name -> IO Problem
+loadProblem :: Name -> IO Spec
 loadProblem name = do
   content <- Text.readFile $ "data/bench/" <> Text.unpack name.getName
-  case lexParse (parser @(Named Problem)) content of
+  case lexParse (parser @(Named Spec)) content of
     Nothing -> error $ "Failed to parse " <> show (pretty name)
-    Just problem -> return problem.value
+    Just spec -> return spec.value
 
-loadAll :: IO [Named Problem]
+loadAll :: IO [Named Spec]
 loadAll = do
   xs <- listDirectory "data/bench/"
   forM (reverse xs) \name -> do
     content <- Text.readFile $ "data/bench/" <> name
-    case lexParse (parser @(Named Problem)) content of
+    case lexParse (parser @(Named Spec)) content of
       Nothing -> error $ "Failed to parse " <> show (pretty name)
-      Just problem -> return problem
+      Just spec -> return spec
 
 class Compare a where
   comparison :: a -> a -> Property

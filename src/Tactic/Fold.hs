@@ -6,7 +6,7 @@ import Base hiding (fold)
 import Control.Effect.Fresh.Named
 
 import Language.Expr
-import Language.Problem
+import Language.Spec
 import Language.Type
 import Language.Container
 import Language.Container.Morphism
@@ -40,13 +40,13 @@ fold :: Tactic sig m => Name -> m Filling
 fold name = do
   Arg mono terms <- getArg name
   local (hide [name]) do
-    problem <- ask @Problem
+    spec <- ask @Spec
     ctx <- ask
 
-    rules <- either (throwError . Unrealizable) return $ check ctx Problem
-      { signature = problem.signature
-        { inputs = Named name mono : problem.signature.inputs }
-      , examples = zip terms problem.examples <&>
+    rules <- either (throwError . Unrealizable) return $ check ctx Spec
+      { signature = spec.signature
+        { inputs = Named name mono : spec.signature.inputs }
+      , examples = zip terms spec.examples <&>
         \(i, Example is o) -> Example (i:is) o
       }
 
@@ -54,7 +54,7 @@ fold name = do
 
     unrolled <- forM terms $ unroll mono
 
-    examples <- forM (zip unrolled problem.examples)
+    examples <- forM (zip unrolled spec.examples)
       \(argument, Example inputs output) -> do
         fixed <- join <$> forM argument \x ->
           maybe (throwError TraceIncomplete) pure $ recurse (x:inputs)
@@ -63,9 +63,9 @@ fold name = do
     (baseFunctor, types) <- getBaseFunctor mono
 
     r <- freshName "r"
-    f <- local (const $ Problem problem.signature
-      { inputs = problem.signature.inputs ++
-        [ Named r $ Data baseFunctor (types ++ [problem.signature.output]) ]
+    f <- local (const $ Spec spec.signature
+      { inputs = spec.signature.inputs ++
+        [ Named r $ Data baseFunctor (types ++ [spec.signature.output]) ]
       } examples) $ elim r >>> rerealize hole
 
     let result = Apps (Var "cata") [Lams [r] f, Var name]
@@ -75,13 +75,13 @@ para :: Tactic sig m => Name -> m Filling
 para name = do
   Arg mono terms <- getArg name
   local (hide [name]) do
-    problem <- ask @Problem
+    spec <- ask @Spec
     ctx <- ask
 
-    rules <- either (throwError . Unrealizable) return $ check ctx Problem
-      { signature = problem.signature
-        { inputs = Named name mono : problem.signature.inputs }
-      , examples = zip terms problem.examples <&>
+    rules <- either (throwError . Unrealizable) return $ check ctx Spec
+      { signature = spec.signature
+        { inputs = Named name mono : spec.signature.inputs }
+      , examples = zip terms spec.examples <&>
         \(i, Example is o) -> Example (i:is) o
       }
 
@@ -89,7 +89,7 @@ para name = do
 
     unrolled <- forM terms $ unroll mono
 
-    examples <- forM (zip unrolled problem.examples)
+    examples <- forM (zip unrolled spec.examples)
       \(argument, Example inputs output) -> do
         fixed <- join <$> forM argument \x ->
           maybe (throwError TraceIncomplete) (pure . Tuple . (:[x])) $ recurse (x:inputs)
@@ -98,10 +98,10 @@ para name = do
     (baseFunctor, types) <- getBaseFunctor mono
 
     r <- freshName "r"
-    f <- local (const $ Problem problem.signature
-      { inputs = problem.signature.inputs ++
+    f <- local (const $ Spec spec.signature
+      { inputs = spec.signature.inputs ++
         [ Named r $ Data baseFunctor (types ++
-          [Product [problem.signature.output, mono]])
+          [Product [spec.signature.output, mono]])
         ]
       } examples) $ elim r >>> rerealize hole
 
@@ -113,13 +113,13 @@ cata :: Tactic sig m => Name -> m Filling
 cata name = do
   Arg mono terms <- getArg name
   local (hide [name]) do
-    problem <- ask @Problem
+    spec <- ask @Spec
     ctx <- ask
 
-    rules <- either (throwError . Unrealizable) return $ check ctx Problem
-      { signature = problem.signature
-        { inputs = Named name mono : problem.signature.inputs }
-      , examples = zip terms problem.examples <&>
+    rules <- either (throwError . Unrealizable) return $ check ctx Spec
+      { signature = spec.signature
+        { inputs = Named name mono : spec.signature.inputs }
+      , examples = zip terms spec.examples <&>
         \(i, Example is o) -> Example (i:is) o
       }
 
@@ -127,7 +127,7 @@ cata name = do
 
     unrolled <- forM terms $ unroll mono
 
-    examples <- forM (zip unrolled problem.examples)
+    examples <- forM (zip unrolled spec.examples)
       \(argument, Example inputs output) -> do
         fixed <- join <$> forM argument \x ->
           maybe (throwError TraceIncomplete) pure $ recurse (x:inputs)
@@ -136,9 +136,9 @@ cata name = do
     (baseFunctor, types) <- getBaseFunctor mono
 
     r <- freshName "r"
-    f <- local (const $ Problem problem.signature
-      { inputs = problem.signature.inputs ++
-        [ Named r $ Data baseFunctor (types ++ [problem.signature.output]) ]
+    f <- local (const $ Spec spec.signature
+      { inputs = spec.signature.inputs ++
+        [ Named r $ Data baseFunctor (types ++ [spec.signature.output]) ]
       } examples) $ rerealize hole
 
     let result = Apps (Var "cata") [Lams [r] f, Var name]

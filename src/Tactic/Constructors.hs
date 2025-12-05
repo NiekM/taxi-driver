@@ -7,7 +7,7 @@ import Data.List.NonEmpty qualified as NonEmpty
 
 import Base
 import Language.Expr
-import Language.Problem
+import Language.Spec
 import Language.Type
 import Tactic.Core
 import Tactic.Hole
@@ -17,21 +17,21 @@ constructors = introCtr <| introTuple
 
 introTuple :: Tactic sig m => m Filling
 introTuple = do
-  problem <- ask @Problem
-  case problem.signature.output of
+  spec <- ask @Spec
+  case spec.signature.output of
     Product _ ->
-      tuple <$> forM (projections problem) \p ->
+      tuple <$> forM (projections spec) \p ->
         local (const p) hole
     _ -> throwError $ NotApplicable "goal is not a tuple"
 
 introCtr :: Tactic sig m => m Filling
 introCtr = do
-  problem <- ask @Problem
-  case problem.signature.output of
+  spec <- ask @Spec
+  case spec.signature.output of
     Data d ts -> do
       cs <- asks $ getConstructors d ts
       -- TODO: getConstructor that returns the fields of one specific ctr
-      exs <- forM problem.examples \example -> case example.output of
+      exs <- forM spec.examples \example -> case example.output of
         Ctr c e -> (c,) <$> forM (projections e) \x ->
           return (example { output = x } :: Example)
         _ -> throwError $ NotApplicable "output not a constructor"
@@ -46,7 +46,7 @@ introCtr = do
             Just ct -> do
               let goals = projections ct
               es <- forM (zip exampless goals) \(examples, output) -> do
-                let signature = problem.signature { output } :: Signature
-                local (const Problem { signature, examples }) hole
+                let signature = spec.signature { output } :: Signature
+                local (const Spec { signature, examples }) hole
               return . Ctr c $ tuple es
     _ -> throwError $ NotApplicable "goal is not a datatype"

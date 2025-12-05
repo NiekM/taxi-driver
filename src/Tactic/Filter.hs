@@ -5,7 +5,7 @@ import Control.Effect.Fresh.Named
 import Data.List qualified as List
 
 import Language.Expr
-import Language.Problem
+import Language.Spec
 import Language.Type
 
 import Tactic.Core
@@ -19,11 +19,11 @@ filter :: Tactic sig m => Name -> m Filling
 filter name = do
   Arg mono terms <- getArg name
   local (hide [name]) do
-    problem <- ask @Problem
-    case (mono, problem.signature.output) of
+    spec <- ask @Spec
+    case (mono, spec.signature.output) of
       (Data "List" [t], Data "List" [u]) -> do
         when (t /= u) $ throwError $ NotApplicable "list types do not match"
-        examples <- forM (zip terms problem.examples) \case
+        examples <- forM (zip terms spec.examples) \case
           (List inputs, Example scope (List outputs)) -> do
             unless (isFilter inputs outputs) $ throwError $ PropagationError "not a filter"
             return $ List.nub inputs <&> \x ->
@@ -31,11 +31,11 @@ filter name = do
           _ -> error "Not actually lists."
         x <- freshName "x"
         let
-          Signature constraints context _ = problem.signature
+          Signature constraints context _ = spec.signature
           signature =
             Signature constraints (context ++ [Named x t]) (Data "Bool" [])
-          subproblem = Problem signature $ concat examples
-        local (const subproblem) do
+          subspec = Spec signature $ concat examples
+        local (const subspec) do
           f <- rerealize hole
           let result = Apps (Var "filter") [Lams [x] f, Var name]
           return result

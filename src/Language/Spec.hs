@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-ambiguous-fields #-}
 
-module Language.Problem where
+module Language.Spec where
 
 import Data.List qualified as List
 import Data.List.NonEmpty qualified as NonEmpty
@@ -23,23 +23,23 @@ data Example = Example
   } deriving stock (Eq, Ord, Show)
 
 -- | A declaration consists of a signature with some bindings.
-data Problem = Problem
+data Spec = Spec
   { signature :: Signature
   , examples  :: [Example]
   } deriving stock (Eq, Ord, Show)
 
-evaluate :: Program Void -> Problem -> Maybe [Value]
-evaluate program problem = forM problem.examples \example ->
+evaluate :: Program Void -> Spec -> Maybe [Value]
+evaluate program spec = forM spec.examples \example ->
   let
     inputs = map Value example.inputs
-    vars = map (.name) problem.signature.inputs
+    vars = map (.name) spec.signature.inputs
     expr = Apps (Lams vars program) inputs
   in case normalize expr of
     Value output -> Just output
     _ -> Nothing
 
-testProblem :: Program Void -> Problem -> Bool
-testProblem program problem = problem.examples & all \example ->
+testSpec :: Program Void -> Spec -> Bool
+testSpec program spec = spec.examples & all \example ->
   let
     inputs = map Value example.inputs
     expr = Apps program inputs
@@ -57,16 +57,16 @@ data Args = Args
   , output :: Arg
   } deriving stock (Eq, Ord, Show)
 
-toArgs :: Problem -> Args
-toArgs (Problem signature examples) = Args
+toArgs :: Spec -> Args
+toArgs (Spec signature examples) = Args
   { inputs = zipWith (fmap . flip Arg) (inputs ++ repeat []) signature.inputs
   , output = Arg signature.output outputs
   } where
     (inputs, outputs) = first List.transpose . unzip
       $ examples <&> \ex -> (ex.inputs, ex.output)
 
-fromArgs :: [Constraint] -> Args -> Problem
-fromArgs constraints (Args inputs (Arg goal outputs)) = Problem
+fromArgs :: [Constraint] -> Args -> Spec
+fromArgs constraints (Args inputs (Arg goal outputs)) = Spec
   { signature = Signature
     { constraints
     , inputs = inputs <&> fmap (.mono)
@@ -76,12 +76,12 @@ fromArgs constraints (Args inputs (Arg goal outputs)) = Problem
   } where
     exInputs = List.transpose $ map (.value.terms) inputs
 
-onArgs :: (Args -> Args) -> Problem -> Problem
+onArgs :: (Args -> Args) -> Spec -> Spec
 onArgs f p = fromArgs p.signature.constraints . f $ toArgs p
 
 -- Check the realizability of a set of input-output examples (ignoring the types)
 -- Returns conflicting examples.
-monoCheck :: Problem -> Maybe (NonEmpty (NonEmpty Example))
+monoCheck :: Spec -> Maybe (NonEmpty (NonEmpty Example))
 monoCheck p = NonEmpty.nonEmpty $ filter inconsistent sameInputs
   where
     inconsistent (x :| xs) = any (/= x) xs
@@ -94,27 +94,27 @@ disable ss args = args { inputs = map enable args.inputs }
       | name `Set.notMember` ss = Named name arg
       | otherwise = Named name . Arg (Free "_") $ Unit <$ arg.terms
 
-variables :: Problem -> [Name]
-variables problem = problem.signature.inputs <&> (.name)
+variables :: Spec -> [Name]
+variables spec = spec.signature.inputs <&> (.name)
 
-hide :: [Name] -> Problem -> Problem
+hide :: [Name] -> Spec -> Spec
 hide names = onArgs \args -> args
   { inputs = filter (\arg -> arg.name `notElem` names) args.inputs }
 
-addInputs :: [Named Arg] -> Problem -> Problem
+addInputs :: [Named Arg] -> Spec -> Spec
 addInputs new = onArgs \args -> args { inputs = args.inputs ++ new }
 
-inputArgs :: Problem -> [Named Arg]
-inputArgs problem = (toArgs problem).inputs
+inputArgs :: Spec -> [Named Arg]
+inputArgs spec = (toArgs spec).inputs
 
-outputArg :: Problem -> Arg
-outputArg problem = (toArgs problem).output
+outputArg :: Spec -> Arg
+outputArg spec = (toArgs spec).output
 
 named :: [Named a] -> Map Name a
 named = Map.fromList . map \x -> (x.name, x.value)
 
-split :: DataContext -> Arg -> Problem -> Either Text (Map Name (Arg, Problem))
-split ctx (Arg (Data d ts) terms) (Problem signature examples) = do
+split :: DataContext -> Arg -> Spec -> Either Text (Map Name (Arg, Spec))
+split ctx (Arg (Data d ts) terms) (Spec signature examples) = do
   fields <- forM terms \case
     Ctr c x -> Right (c, x)
     _ -> Left "field is not a constructor"
@@ -124,15 +124,15 @@ split ctx (Arg (Data d ts) terms) (Problem signature examples) = do
     m = NonEmpty.toList <$> gather paired
     (exs, vals) = Functor.unzip $ unzip <$> Map.union m ([] <$ cs)
     args = Map.intersectionWith Arg cs vals
-    prbs = Problem signature <$> exs
+    prbs = Spec signature <$> exs
   return $ Map.intersectionWith (,) args prbs
 split _ _ _ = Left "argument is not a datatype"
 
 instance Project Example where
   projections (Example ins out) = Example ins <$> projections out
 
-instance Project Problem where
-  projections prob = zipWith Problem ss (bs ++ repeat [])
+instance Project Spec where
+  projections prob = zipWith Spec ss (bs ++ repeat [])
     where
       ss = projections prob.signature
       bs = List.transpose $ map projections prob.examples

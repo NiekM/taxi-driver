@@ -11,7 +11,7 @@ data RealizabilityLevel
 data TacticOptions = TacticOptions
   { removeDuplicates   :: Bool
   , checkCoverage      :: Bool
-  , reconstructProblem :: Bool
+  , reconstructSpec    :: Bool
   , conditionalBranch  :: Bool
   , realizabilityLevel :: RealizabilityLevel
   } deriving stock (Eq, Ord, Show, Read)
@@ -20,7 +20,7 @@ instance Default TacticOptions where
   def = TacticOptions
     { removeDuplicates   = True
     , checkCoverage      = True
-    , reconstructProblem = True
+    , reconstructSpec    = True
     , conditionalBranch  = True
     , realizabilityLevel = PolyRealizability
     }

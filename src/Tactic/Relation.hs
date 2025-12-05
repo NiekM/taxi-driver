@@ -3,7 +3,7 @@ module Tactic.Relation where
 import Base
 
 import Language.Expr
-import Language.Problem
+import Language.Spec
 import Language.Type
 
 import Tactic.Core
@@ -19,11 +19,11 @@ elimEq :: Tactic sig m => Name -> Name -> m Filling
 elimEq name1 name2 = do
   x <- getArg name1
   y <- getArg name2
-  problem <- ask @Problem
+  spec <- ask @Spec
   case (x, y) of
     (Arg (Free a) xs, Arg (Free b) ys) -> do
       when (a /= b) $ throwError $ NotApplicable "args done't have the same type"
-      when (Eq a `notElem` problem.signature.constraints) $
+      when (Eq a `notElem` spec.signature.constraints) $
         throwError $ NotApplicable "type has no Eq constraint"
       let bools = Arg (Data "Bool" []) $ Bool <$> zipWith (==) xs ys
       elimArg (Apps (Var "eq") [Var name1, Var name2]) bools
@@ -33,11 +33,11 @@ elimOrd :: Tactic sig m => Name -> Name -> m Filling
 elimOrd name1 name2 = do
   x <- getArg name1
   y <- getArg name2
-  problem <- ask @Problem
+  spec <- ask @Spec
   case (x, y) of
     (Arg (Free a) xs, Arg (Free b) ys) -> do
       when (a /= b) $ throwError $ NotApplicable "args done't have the same type"
-      when (Ord a `notElem` problem.signature.constraints) $
+      when (Ord a `notElem` spec.signature.constraints) $
         throwError $ NotApplicable "type has no Ord constraint"
       case (traverse isValue xs, traverse isValue ys) of
         (Just xs', Just ys') -> do

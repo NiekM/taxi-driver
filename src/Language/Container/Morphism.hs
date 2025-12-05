@@ -12,7 +12,7 @@ import Data.Map.Multi qualified as Multi
 
 import Language.Type
 import Language.Expr
-import Language.Problem
+import Language.Spec
 import Language.Container
 import Language.Container.Relation
 import Utils
@@ -58,7 +58,7 @@ checkExample dataContext signature example = do
   when (length types /= length example.inputs)
     $ throwError $ ArgumentMismatch types example.inputs
   unless (Multi.consistent result.origins)
-    $ throwError $ MagicOutput Problem { signature, examples = [example] }
+    $ throwError $ MagicOutput Spec { signature, examples = [example] }
 
   return result
 
@@ -82,7 +82,7 @@ combine = traverse merge . NonEmpty.groupAllWith (.input)
 data Conflict
   = ArgumentMismatch [Mono] [Value]
   | ShapeConflict (NonEmpty Rule)
-  | MagicOutput Problem
+  | MagicOutput Spec
   | PositionConflict (NonEmpty Rule)
   | MonoConflict (NonEmpty (NonEmpty Example))
   deriving stock (Eq, Ord, Show)
@@ -91,9 +91,9 @@ data Conflict
 -- good to check whether the type is inhabited. Especially in the case were
 -- there are no examples, we should still be able to check automatically that
 -- e.g. `{x : a} -> b` is not realizable.
-check :: DataContext -> Problem -> Either Conflict [Rule]
-check dataContext problem =
-  combine =<< mapM (checkExample dataContext problem.signature) problem.examples
+check :: DataContext -> Spec -> Either Conflict [Rule]
+check dataContext spec =
+  combine =<< mapM (checkExample dataContext spec.signature) spec.examples
 
 matchShape :: Shape -> Value -> Maybe (Map Position Value)
 matchShape (Tuple xs) (Tuple ys) = Map.unions <$> zipWithM matchShape xs ys
@@ -120,9 +120,9 @@ applyRule rule terms = do
 applyRules :: [Rule] -> [Value] -> Maybe Value
 applyRules rules terms = altMap (`applyRule` terms) rules
 
-reconstruct :: [Rule] -> Problem -> Problem
-reconstruct rules problem = problem { examples = fromRule <$> rules }
+reconstruct :: [Rule] -> Spec -> Spec
+reconstruct rules spec = spec { examples = fromRule <$> rules }
   where
     fromRule rule = fromMaybe (error "err") $
-      problem.examples & altMap \example ->
+      spec.examples & altMap \example ->
         Example example.inputs <$> applyRule rule example.inputs

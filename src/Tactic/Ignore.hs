@@ -2,7 +2,7 @@ module Tactic.Ignore where
 
 import Base
 
-import Language.Problem
+import Language.Spec
 
 import Tactic.Check
 import Tactic.Core

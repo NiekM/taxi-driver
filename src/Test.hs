@@ -36,7 +36,7 @@ import Language.Container
 import Language.Container.Morphism
 import Language.Container.Relation
 import Language.Coverage
-import Language.Problem
+import Language.Spec
 import Language.Parser
 import Language.Pretty
 import Language.Prelude
@@ -74,17 +74,17 @@ instance (Pretty e, Pretty a) => Pretty (Either e a) where
 ------ Examples -------
 
 {-# NOINLINE benches #-}
-benches :: [Named Problem]
+benches :: [Named Spec]
 benches = Unsafe.unsafePerformIO loadAll
 
-getBench :: Name -> Named Problem
+getBench :: Name -> Named Spec
 getBench name = Named name . fromJust $ find name benches
 
-instance IsString (Named Problem) where
+instance IsString (Named Spec) where
   fromString = getBench . fromString
 
-instance IsString Problem where
-  fromString = (.value) . fromString @(Named Problem)
+instance IsString Spec where
+  fromString = (.value) . fromString @(Named Spec)
 
 synthAll :: IO ()
 synthAll = do
@@ -107,12 +107,12 @@ synthAll = do
   putStrLn ""
   print $ "Failed:" <+> sep (punctuate ", " $ map pretty failed)
   where
-    gen :: Named Problem -> IO (Maybe (Program Void))
+    gen :: Named Spec -> IO (Maybe (Program Void))
     gen problem = case synth problem.value of
       Nothing -> return Nothing
       Just r -> return (Just r)
 
-    testAndPrint :: Named Problem -> Program Void -> IO Bool
+    testAndPrint :: Named Spec -> Program Void -> IO Bool
     testAndPrint problem result = do
       let f = normalize result
       print . indent 2 $ prettyNamed problem.name f
@@ -127,16 +127,16 @@ synthAll = do
             [pretty passed, "out of", pretty total, "tests passed"]
           return $ and xs
 
-synth :: Problem -> Maybe (Program Void)
-synth problem = case synthesize def problem of
+synth :: Spec -> Maybe (Program Void)
+synth spec = case synthesize def spec of
   Success ((_, Finished program) :| _) -> Just program
   _ -> Nothing
 
-runCheck :: Problem -> Either Conflict [Rule]
+runCheck :: Spec -> Either Conflict [Rule]
 runCheck = check datatypes
 
-testExtract :: Program Void -> Problem -> IO [Bool]
-testExtract program problem = forM problem.examples \example ->
+testExtract :: Program Void -> Spec -> IO [Bool]
+testExtract program spec = forM spec.examples \example ->
   let
     inputs = map Value example.inputs
     expr = Apps program inputs
@@ -163,8 +163,8 @@ pattern PROGRAM p <- Success ((_, Finished p) :| _)
 --   the fact that the coalgebra has an infinite input.
 --
 
-tryOut :: Interpret a => Problem -> a
-tryOut problem = case synthesize def problem of
+tryOut :: Interpret a => Spec -> a
+tryOut spec = case synthesize def spec of
   Success ((_, Finished program) :| _) -> interpret program
   _ -> error "Synthesis failed"
 

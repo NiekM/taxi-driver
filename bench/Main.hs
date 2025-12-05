@@ -13,7 +13,7 @@ import Test.QuickCheck hiding (Success, Failure)
 
 import Language.Expr
 import Language.Parser
-import Language.Problem
+import Language.Spec
 import Language.Prelude
 import Tactic.Options
 import Tactic.Core
@@ -23,7 +23,7 @@ import Synth
 import Bench hiding (testSynthesis)
 import System.Directory (listDirectory)
 
-type Problems = [Named [Named (Problem, Model)]]
+type Problems = [Named [Named (Spec, Model)]]
 
 getBenchmark :: IO Problems
 getBenchmark = forM models . mapM $ mapM \(Named name model@(Model fun)) -> do
@@ -46,16 +46,16 @@ yellow text = "\ESC[33m" ++ text ++ "\ESC[0m"
 blue   text = "\ESC[34m" ++ text ++ "\ESC[0m"
 red_bg text = "\ESC[41m" ++ text ++ "\ESC[0m"
 
-synthCheck :: SynthOptions -> Problem -> Model -> IO (String, Bool)
-synthCheck args problem (Model model) = do
-  timed <- timeout 1_000_000 . Control.Exception.evaluate $ synthesize args problem
+synthCheck :: SynthOptions -> Spec -> Model -> IO (String, Bool)
+synthCheck args spec (Model model) = do
+  timed <- timeout 1_000_000 . Control.Exception.evaluate $ synthesize args spec
   case timed of
     Nothing -> return (yellow "timeout", False)
     Just (Failure Depleted) -> return ("out of fuel", True)
     Just (Failure Exhausted) -> return (blue "unrealizable", True)
     Just (Success ((_, Unfinished _filling) :| _)) -> return (yellow "realizable", True)
     Just (Success ((_, Finished program) :| _))
-      | testProblem program problem -> do
+      | testSpec program spec -> do
         result <- quickCheckWithResult stdArgs { chatty = False }
           . withMaxSize 25 $ comparison model (interpret program)
         return if isSuccess result
@@ -92,10 +92,10 @@ skip = whnf (const ()) ()
 synthBench :: BenchOptions -> Problems -> IO Benchmark
 synthBench options problems = testGroup (show $ pretty options) <$>
   forM problems \group -> do
-    groupBenches <- forM group.value \(Named name (problem, model)) -> do
-      (message, withinTime) <- synthCheck synArgs problem model
+    groupBenches <- forM group.value \(Named name (spec, model)) -> do
+      (message, withinTime) <- synthCheck synArgs spec model
       return $ bench (showName name message) $
-        if withinTime then whnf (synthesize synArgs) problem else skip
+        if withinTime then whnf (synthesize synArgs) spec else skip
     return $ testGroup (show $ pretty group.name) groupBenches
   where
     maxLength = maximum $ problems >>= \x -> map (Text.length . (.name.getName)) x.value
@@ -112,14 +112,14 @@ synthBench options problems = testGroup (show $ pretty options) <$>
 foldBench :: Problems -> IO Benchmark
 foldBench problems = testGroup "fold detection" <$>
   forM problems \group -> do
-    groupBenches <- forM group.value \(Named name (problem, _)) -> do
-      let message = intercalate ", " $ synthesizeAll synArgs problem & mapMaybe \case
+    groupBenches <- forM group.value \(Named name (spec, _)) -> do
+      let message = intercalate ", " $ synthesizeAll synArgs spec & mapMaybe \case
             (_, Left NotApplicable{}) -> Nothing
             (_, Left Unrealizable{}) -> Just $ red "failure"
             (_, Left TraceIncomplete{}) -> Just $ red_bg "missing trace"
             (_, Left PropagationError{}) -> Just $ red_bg "propagation error"
             (_, Right{}) -> Just $ green "success"
-      return $ bench (showName name message) $ nf (map (fmap isRight) <$> synthesizeAll synArgs) problem
+      return $ bench (showName name message) $ nf (map (fmap isRight) <$> synthesizeAll synArgs) spec
     return $ testGroup (Text.unpack group.name.getName) groupBenches
   where
     maxLength = maximum $ problems >>= \x -> map (Text.length . (.name.getName)) x.value
@@ -141,18 +141,18 @@ main = do
     , testGroup "synthesis" synthBenches
     ]
 
-load :: Name -> IO Problem
+load :: Name -> IO Spec
 load name = do
   content <- Text.readFile $ "data/bench/" <> Text.unpack name.getName
-  case lexParse (parser @(Named Problem)) content of
+  case lexParse (parser @(Named Spec)) content of
     Nothing -> error $ "Failed to parse " <> show (pretty name)
-    Just problem -> return problem.value
+    Just spec -> return spec.value
 
-foldCheck :: Named Problem -> Benchmark
-foldCheck (Named name problem) = bench (Text.unpack name.getName) $ whnf (isFold "xs") problem
+foldCheck :: Named Spec -> Benchmark
+foldCheck (Named name spec) = bench (Text.unpack name.getName) $ whnf (isFold "xs") spec
 
-isFold :: Name -> Problem -> Bool
-isFold var problem = case runTactic def datatypes problem (Tactic.fold var) of
+isFold :: Name -> Spec -> Bool
+isFold var spec = case runTactic def datatypes spec (Tactic.fold var) of
   Left _ -> False
   Right _ -> True
 

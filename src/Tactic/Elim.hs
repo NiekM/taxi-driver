@@ -6,7 +6,7 @@ import Control.Carrier.Reader
 
 import Base
 import Language.Expr
-import Language.Problem
+import Language.Spec
 import Language.Type
 import Tactic.Core
 import Tactic.Hole
@@ -14,8 +14,8 @@ import Tactic.Hole
 elimArg :: Tactic sig m => Program Void -> Arg -> m Filling
 elimArg expr arg = do
   ctx <- ask @DataContext
-  problem <- ask @Problem
-  case split ctx arg problem of
+  spec <- ask @Spec
+  case split ctx arg spec of
     Left e -> throwError $ NotApplicable $ "elim: " <> e
     Right m -> do
       arms <- forM m \(a, p) -> local (const p) $ binds [Named "x" a] hole

@@ -30,7 +30,7 @@ import Control.Monad.Search
 import Base hiding (repeat, replicate)
 import Language.Type
 import Language.Expr
-import Language.Problem
+import Language.Spec
 
 import Tactic
 import Tactic.Combinators
@@ -96,8 +96,8 @@ instance Pretty Solution where
 takeWhileJust :: [Maybe a] -> [a]
 takeWhileJust = foldr (maybe (const []) (:)) []
 
-synthesizeAll :: SynthOptions -> Problem -> [(Nat, Either TacticFailure Extract)]
-synthesizeAll args problem = runSearch searchSpace & mapMaybe
+synthesizeAll :: SynthOptions -> Spec -> [(Nat, Either TacticFailure Extract)]
+synthesizeAll args spec = runSearch searchSpace & mapMaybe
   \(Sum weight, filling) -> (weight,) . fmap toExtract <$> filling
   where
     toExtract :: Filling -> Extract
@@ -113,11 +113,11 @@ synthesizeAll args problem = runSearch searchSpace & mapMaybe
       . runError
       . runReader args.context
       . runReader args.tacticOptions
-      . runReader problem
-      $ Lams (variables problem) <$> (rerealize hole >>> args.tactic)
+      . runReader spec
+      $ Lams (variables spec) <$> (rerealize hole >>> args.tactic)
 
-synthesize :: SynthOptions -> Problem -> Solution
-synthesize args problem = case dropFailures $ runSearch searchSpace of
+synthesize :: SynthOptions -> Spec -> Solution
+synthesize args spec = case dropFailures $ runSearch searchSpace of
   [] -> Failure Exhausted
   -- TODO: when we add a fuel limit, it says depleted even if it should be
   -- exhausted. How do we distinguish between them?
@@ -144,8 +144,8 @@ synthesize args problem = case dropFailures $ runSearch searchSpace of
       . runError
       . runReader args.context
       . runReader args.tacticOptions
-      . runReader problem
-      $ Lams (variables problem) <$> (rerealize hole >>> args.tactic)
+      . runReader spec
+      $ Lams (variables spec) <$> (rerealize hole >>> args.tactic)
 
 type Synth sig m = (Tactic sig m, Has Choose sig m)
 
@@ -156,14 +156,14 @@ type Synth sig m = (Tactic sig m, Has Choose sig m)
 -- outputs the current state to the console? Or perhaps a next button that
 -- explores the next node (based on its weight).
 
-type TacticC m = ReaderC Problem (ReaderC TacticOptions (ReaderC DataContext (ErrorC TacticFailure (FreshC m))))
+type TacticC m = ReaderC Spec (ReaderC TacticOptions (ReaderC DataContext (ErrorC TacticFailure (FreshC m))))
 
 type SynthC = TacticC (Search (Sum Nat))
 
-runTactic :: TacticOptions -> DataContext -> Problem -> TacticC (IgnoreC Identity) Filling -> Either TacticFailure Filling
-runTactic tacticOptions context problem tactic = do
-  let vars = variables problem
-  run . ignoreWeight . evalFresh . runError . runReader context . runReader tacticOptions . runReader problem $ Lams vars <$> tactic
+runTactic :: TacticOptions -> DataContext -> Spec -> TacticC (IgnoreC Identity) Filling -> Either TacticFailure Filling
+runTactic tacticOptions context spec tactic = do
+  let vars = variables spec
+  run . ignoreWeight . evalFresh . runError . runReader context . runReader tacticOptions . runReader spec $ Lams vars <$> tactic
 
 -- * Larger tactic groups
 

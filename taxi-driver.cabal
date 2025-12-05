@@ -49,7 +49,7 @@ library
     , Language.Prelude
     , Language.Pretty
     , Language.Arbitrary
-    , Language.Problem
+    , Language.Spec
     , Synth
     , Tactic
     , Tactic.Check

@@ -1,7 +1,8 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module Test where
+-- NOTE: this module is only meant for opening in ghci.
+module Interactive where
 
 import GHC.Generics
 
@@ -86,47 +87,6 @@ instance IsString (Named Spec) where
 instance IsString Spec where
   fromString = (.value) . fromString @(Named Spec)
 
-synthAll :: IO ()
-synthAll = do
-  let milliseconds = 1_000_000
-  bs <- forM benches \problem -> do
-    putStrLn ""
-    print $ "Problem:" <+> pretty problem.name
-    putStrLn ""
-    res <- timeout milliseconds $ gen problem
-    case res of
-      Nothing -> False <$ putStrLn "Synthesis failed: timeout"
-      Just Nothing -> False <$ putStrLn "Synthesis failed: exhaustive"
-      Just (Just p) -> testAndPrint problem p
-  putStrLn ""
-  let passed = length $ filter id bs
-  let total = length bs
-  print $ sep
-    [pretty passed, "out of", pretty total, "synthesized"]
-  let failed = zip benches bs & map ((.name) . fst) . filter (not . snd)
-  putStrLn ""
-  print $ "Failed:" <+> sep (punctuate ", " $ map pretty failed)
-  where
-    gen :: Named Spec -> IO (Maybe (Program Void))
-    gen problem = case synth problem.value of
-      Nothing -> return Nothing
-      Just r -> return (Just r)
-
-    testAndPrint :: Named Spec -> Program Void -> IO Bool
-    testAndPrint problem result = do
-      let f = normalize result
-      print . indent 2 $ prettyNamed problem.name f
-      case vacate f of
-        Nothing -> False <$ putStrLn "Some holes left!"
-        Just p -> do
-          putStrLn ""
-          xs <- testExtract p problem.value
-          let passed = length $ filter id xs
-          let total = length xs
-          print $ sep
-            [pretty passed, "out of", pretty total, "tests passed"]
-          return $ and xs
-
 synth :: Spec -> Maybe (Program Void)
 synth spec = case synthesize def spec of
   Success ((_, Finished program) :| _) -> Just program
@@ -155,37 +115,7 @@ testExtract program spec = forM spec.examples \example ->
 pattern PROGRAM :: Program Void -> Solution
 pattern PROGRAM p <- Success ((_, Finished p) :| _)
 
--- DONE:
--- - Can we do anamorphisms? It seems not.
---   Because the input of a coalgebra is unconstrained.
---   TODO: but is there some dual to unrealizability for anamorphisms?
---   it seems that some dual notion should exist. although the problem lies in
---   the fact that the coalgebra has an infinite input.
---
-
 tryOut :: Interpret a => Spec -> a
 tryOut spec = case synthesize def spec of
   Success ((_, Finished program) :| _) -> interpret program
   _ -> error "Synthesis failed"
-
-
--- Weird insert...
-myInsert :: Ord a => a -> [a] -> [a]
-myInsert x = foldr (\y r -> min x y : map (max y) r) [x]
-
-ofDepth :: Int -> [Tree () ()]
-ofDepth 0 = [Leaf ()]
-ofDepth n = [Node l () r | l <- ofDepth (n - 1), r <- ofDepth (n - 1)]
-  ++ [Node l () r | l <- ofDepth (n - 1), r <- upToDepth (n - 2)]
-  ++ [Node l () r | l <- upToDepth (n - 2), r <- ofDepth (n - 1)]
-
-upToDepth :: Int -> [Tree () ()]
-upToDepth n = [0 .. n] >>= ofDepth
-
-decorate :: Tree () () -> Tree Nat ()
-decorate = fst . go 0 where
-  go n (Leaf ()) = (Leaf (), n)
-  go n (Node l () r) = (Node x n y, k)
-    where
-      (x, m) = go (n + 1) l
-      (y, k) = go m r

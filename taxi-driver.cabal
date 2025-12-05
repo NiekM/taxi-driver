@@ -1,5 +1,5 @@
 cabal-version:      3.0
-name:               parametrickery
+name:               taxi-driver
 version:            0.1.0.0
 license:            BSD-2-Clause
 license-file:       LICENSE
@@ -74,12 +74,12 @@ library
       fused-effects
     , megaparsec
     , monad-dijkstra
-    , parametrickery-prelude
+    , taxi-driver-prelude
     , QuickCheck
 
   hs-source-dirs:   src
 
-library parametrickery-prelude
+library taxi-driver-prelude
   import:           shared-properties
 
   exposed-modules:
@@ -105,18 +105,7 @@ library parametrickery-prelude
 
   hs-source-dirs:   prelude
 
-executable parametrickery
-  import:           shared-properties
-
-  main-is:          Main.hs
-
-  build-depends:
-      parametrickery
-    , parametrickery-prelude
-
-  hs-source-dirs:   app
-
-test-suite parametrickery-test
+test-suite taxi-driver-test
   import:           shared-properties
 
   type:             exitcode-stdio-1.0
@@ -127,14 +116,14 @@ test-suite parametrickery-test
 
   build-depends:
       fused-effects
-    , parametrickery
-    , parametrickery-prelude
+    , taxi-driver
+    , taxi-driver-prelude
     , QuickCheck
     , tasty
     , tasty-quickcheck
     , tasty-hunit
 
-benchmark parametrickery-bench
+benchmark taxi-driver-bench
   import:           shared-properties
 
   type:             exitcode-stdio-1.0
@@ -145,8 +134,8 @@ benchmark parametrickery-bench
 
   build-depends:
       optparse-applicative
-    , parametrickery
-    , parametrickery-prelude
+    , taxi-driver
+    , taxi-driver-prelude
     , QuickCheck
     , tasty
     , tasty-bench

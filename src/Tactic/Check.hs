@@ -27,10 +27,10 @@ rerealize cnt = do
       Right rules
         -- NOTE: coverage seems to have a very small overhead, and sometimes leads to a speedup
         -- coverage works mostly for folds, since they can remove input lists, allowing for a change in coverage.
-        | checkCoverage, Total <- coverage context problem.signature rules -> traceM "T" >> (cnt >>> extract)
+        | checkCoverage, Total <- coverage context problem.signature rules -> cnt >>> extract
         -- NOTE: Reconstruction seems to improve performance slightly by simplifying the resulting constraint.
-        | reconstructProblem -> traceM "R" >> local (reconstruct rules) cnt
-        | otherwise -> traceM "." >> cnt
+        | reconstructProblem -> local (reconstruct rules) cnt
+        | otherwise -> cnt
 
 assert :: (Tactic sig m) => Example -> m Filling
 assert example = local (\problem  -> problem { examples = example : problem.examples }) $ rerealize none

@@ -13,7 +13,7 @@ module Language.Expr
     , Ordering
     , Nil, Cons, List
     , Zero, Succ, Nat
-    , Tree, TangoLL, TangoLN
+    , Tree
     )
   , Lit(..)
   , Program
@@ -45,8 +45,6 @@ import Data.Foldable
 
 import Data.Proxy
 
-import Data.Tango.List.List as LL
-import Data.Tango.List.Nat  as LN
 import Data.Tree.Binary
 
 import Unsafe.Coerce qualified as Unsafe
@@ -181,8 +179,6 @@ norm @_ @h ctx = \case
     Apps (Var "map") [g, List xs] -> List $ map (norm ctx . App g) xs
     Apps (Var "filter") [p, List xs] -> List $
       filter (fromMaybe False . fromExpr . norm ctx . App p) xs
-    Apps (Var "tango") [List xs, List ys] -> TangoLL $ LL.tango xs ys
-    Apps (Var "tango") [List xs, Nat n] -> TangoLN $ LN.tango xs n
     Apps (Var "eq" ) [Value a, Value b] -> Bool (a == b)
     Apps (Var "cmp") [Value a, Value b] -> Ordering (compareVal a b)
     e -> e
@@ -198,16 +194,6 @@ norm @_ @h ctx = \case
       List xs -> foldr (\y r -> App alg $ Cons y r) (App alg Nil) xs
       Tree  t -> foldTree (\l y r -> App alg $ Ctr "Node" $ Tuple [l, y, r]) (App alg . Ctr "Leaf") t
       Nat   n -> foldNat n (App alg . Ctr "Succ") (App alg $ Nat 0)
-      TangoLL t -> t & LL.foldTango \case
-        NNF -> App alg $ Ctr "NN" Unit
-        CNF x xs -> App alg $ Ctr "CN" $ Tuple [x, List xs]
-        NCF y ys -> App alg $ Ctr "NC" $ Tuple [y, List ys]
-        CCF x y xys -> App alg $ Ctr "CC" $ Tuple [x, y, xys]
-      TangoLN t -> t & LN.foldTango \case
-        NZF -> App alg $ Ctr "NZ" Unit
-        CZF x xs -> App alg $ Ctr "CZ" $ Tuple [x, List xs]
-        NSF n -> App alg $ Ctr "NS" $ Nat n
-        CSF x xns -> App alg $ Ctr "CS" $ Tuple [x, xns]
       e -> error $ "cata is not defined for expressions of the form " ++ show (() <$ e)
     appPara :: Program h -> Program h -> Program h
     appPara alg = \case
@@ -330,16 +316,6 @@ pattern Ordering :: Ordering -> Expr l h
 pattern Ordering o <- (fromExpr -> Just o)
   where Ordering o = toExpr _ o
 
--- * Tango
-
-pattern TangoLL :: TangoListList (Expr l h) (Expr l h) -> Expr l h
-pattern TangoLL xys <- (fromExpr -> Just xys)
-  where TangoLL xys = toExpr _ xys
-
-pattern TangoLN :: TangoListNat (Expr l h) -> Expr l h
-pattern TangoLN xys <- (fromExpr -> Just xys)
-  where TangoLN xys = toExpr _ xys
-
 symbolName :: forall s -> KnownSymbol s => Name
 symbolName s = fromString . symbolVal $ Proxy @s
 
@@ -381,10 +357,8 @@ instance ToExpr l h Bool
 instance ToExpr l h Ordering
 instance ToExpr l h a => ToExpr l h (Maybe a)
 instance ToExpr l h a => ToExpr l h [a]
-instance (ToExpr l h a) => ToExpr l h (TangoListNat a)
 instance (ToExpr l h a, ToExpr l h b) => ToExpr l h (Either a b)
 instance (ToExpr l h a, ToExpr l h b) => ToExpr l h (Tree a b)
-instance (ToExpr l h a, ToExpr l h b) => ToExpr l h (TangoListList a b)
 
 instance ToExpr l h a => ToExpr l h (SortedList a) where
   toExpr _ (Sorted xs) = toExpr _ xs
@@ -460,10 +434,8 @@ instance FromExpr l h Bool
 instance FromExpr l h Ordering
 instance FromExpr l h a => FromExpr l h (Maybe a)
 instance FromExpr l h a => FromExpr l h [a]
-instance FromExpr l h a => FromExpr l h (TangoListNat a)
 instance (FromExpr l h a, FromExpr l h b) => FromExpr l h (Either a b)
 instance (FromExpr l h a, FromExpr l h b) => FromExpr l h (Tree a b)
-instance (FromExpr l h a, FromExpr l h b) => FromExpr l h (TangoListList a b)
 
 instance FromExpr l h a => FromExpr l h (SortedList a) where
   fromExpr xs = Sorted <$> fromExpr xs

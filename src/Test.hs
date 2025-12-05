@@ -51,15 +51,12 @@ import Tactic.Filter qualified as Tactic
 import Tactic.Fold qualified as Tactic
 import Tactic.Map qualified as Tactic
 import Tactic.Relation qualified as Tactic
-import Tactic.Tango qualified as Tactic
 import Synth
 
 import Test.QuickCheck hiding (Success, Failure, total)
 import Language.Arbitrary qualified as Arbitrary
 
 import Bench
-
-import Data.Tango.List.List qualified as Tango
 
 ------ Utilities ------
 
@@ -201,10 +198,6 @@ decorate = fst . go 0 where
     where
       (x, m) = go (n + 1) l
       (y, k) = go m r
-
--- NOTE: levels does not work using tango, because the fold over the merged lists is never trace complete
--- The reason this happens is that the lengths of lists returned by levels are increasing, and the first ones are always of length 1.
--- It is not possible that the head of the lists contain more than 1 element.
 
 loadMaxRefinements :: IO [Named Problem]
 loadMaxRefinements = do

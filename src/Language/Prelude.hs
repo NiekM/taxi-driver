@@ -4,8 +4,6 @@ import Base hiding (Nat)
 import GHC.Generics
 
 import Data.Tree.Binary
-import Data.Tango.List.List
-import Data.Tango.List.Nat
 
 import Language.Type
 
@@ -23,6 +21,4 @@ datatypes = DataContext $
   , toData (type [])
   , toData Either
   , toData Tree
-  , toData TangoListList
-  , toData TangoListNat
   ] >>= \d -> d : maybeToList (base d)

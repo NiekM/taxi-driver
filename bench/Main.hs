@@ -39,6 +39,13 @@ getBenchmark = forM models . mapM $ mapM \(Named name model@(Model fun)) -> do
 
   return $ Named name (problem, model)
 
+red, green, yellow, blue, red_bg :: String -> String
+red    text = "\ESC[31m" ++ text ++ "\ESC[0m"
+green  text = "\ESC[32m" ++ text ++ "\ESC[0m"
+yellow text = "\ESC[33m" ++ text ++ "\ESC[0m"
+blue   text = "\ESC[34m" ++ text ++ "\ESC[0m"
+red_bg text = "\ESC[41m" ++ text ++ "\ESC[0m"
+
 synthCheck :: SynthOptions -> Problem -> Model -> IO (String, Bool)
 synthCheck args problem (Model model) = do
   timed <- timeout 1_000_000 . Control.Exception.evaluate $ synthesize args problem
@@ -55,12 +62,6 @@ synthCheck args problem (Model model) = do
           then (green "success", True)
           else (red "overfit", True)
       | otherwise -> return (red_bg "inconsistent result", True)
-    where
-      red    text = "\ESC[31m" ++ text ++ "\ESC[0m"
-      green  text = "\ESC[32m" ++ text ++ "\ESC[0m"
-      yellow text = "\ESC[33m" ++ text ++ "\ESC[0m"
-      blue   text = "\ESC[34m" ++ text ++ "\ESC[0m"
-      red_bg text = "\ESC[41m" ++ text ++ "\ESC[0m"
 
 data BenchOptions
   = NoFeasibility
@@ -127,9 +128,6 @@ foldBench problems = testGroup "fold detection" <$>
     showName :: Name -> String -> String
     showName name message = Text.unpack name.getName <> padding <> "(" <> message <> ")"
       where padding = Base.replicate (maxLength + 3 - Text.length name.getName) ' '
-    red    text = "\ESC[31m" ++ text ++ "\ESC[0m"
-    green  text = "\ESC[32m" ++ text ++ "\ESC[0m"
-    red_bg text = "\ESC[41m" ++ text ++ "\ESC[0m"
 
 main :: IO ()
 main = do
@@ -171,7 +169,7 @@ runBenchmark dir = do
 
   forM_ problems \(Named name problem) -> do
     let len = Text.length name.getName
-    let str = if isFold "xs" problem then "\ESC[32mTrue\ESC[0m" else "\ESC[31mFalse\ESC[0m"
+    let str = if isFold "xs" problem then green "True" else red "False"
     let padding = Base.replicate (maxLength + 3 - len) ' '
     putStrLn $ show (pretty name) <> ":" <> padding <> str
 

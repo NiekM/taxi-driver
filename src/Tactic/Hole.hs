@@ -8,7 +8,6 @@ import Control.Effect.Fresh.Named
 import Base
 import Language.Expr
 import Language.Problem
-import Language.Relevance
 import Language.Type
 import Tactic.Core
 
@@ -20,23 +19,7 @@ hole = do
   foldr @[] (.) id
     [ elimTuples
     , applyWhen tacticOptions.removeDuplicates $ local removeIdenticalInputs
-    , applyWhen tacticOptions.removeIrrelevant removeIrrelevant
     ] none
-
--- BUG: this currently seems to be not working as intended, as it influences the realizability,
--- while removing irrelevants should *not* influence the realizability.
--- However, this may be because `unrealizable` is currently not correctly reported?
-removeIrrelevant :: Tactic sig m => m Filling -> m Filling
-removeIrrelevant cnt = do
-  context <- ask
-  problem <- ask
-  case relevance context problem of
-    Nothing -> cnt
-    Just r ->
-      let
-        irrelevantNames = Set.toList $ foldMap (\(signature, _, _) ->
-          Set.fromList $ map (.name) . filter ((== Free "_") . (.value)) $ signature.inputs) r.relevance
-      in local (hide irrelevantNames) cnt
 
 removeIdenticalInputs :: Problem -> Problem
 removeIdenticalInputs = onArgs \args ->

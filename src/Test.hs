@@ -40,7 +40,6 @@ import Language.Problem
 import Language.Parser
 import Language.Pretty
 import Language.Prelude
-import Language.Relevance
 import Utils
 
 import Tactic
@@ -152,14 +151,6 @@ testExtract program problem = forM problem.examples \example ->
     e -> do
       print $ "Not a value:" <+> pretty e
       return False
-
--- TODO:
--- - Are paramorphisms + relevance superior to catamorphisms?
--- - Can we show that any function is a paramorphism? Or the opposite?
---   Yes. A paramorphism is strictly stronger than elim.
--- - How well does relevance analysis reflect ease of synthesis?
--- - Is progress purely based on relevance?
---
 
 pattern PROGRAM :: Program Void -> Solution
 pattern PROGRAM p <- Success ((_, Finished p) :| _)

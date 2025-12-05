@@ -50,7 +50,6 @@ library
     , Language.Pretty
     , Language.Arbitrary
     , Language.Problem
-    , Language.Relevance
     , Synth
     , Tactic
     , Tactic.Check

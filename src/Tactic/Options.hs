@@ -10,7 +10,6 @@ data RealizabilityLevel
 
 data TacticOptions = TacticOptions
   { removeDuplicates   :: Bool
-  , removeIrrelevant   :: Bool
   , checkCoverage      :: Bool
   , reconstructProblem :: Bool
   , conditionalBranch  :: Bool
@@ -20,7 +19,6 @@ data TacticOptions = TacticOptions
 instance Default TacticOptions where
   def = TacticOptions
     { removeDuplicates   = True
-    , removeIrrelevant   = False
     , checkCoverage      = True
     , reconstructProblem = True
     , conditionalBranch  = True

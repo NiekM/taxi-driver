@@ -165,11 +165,6 @@ runTactic tacticOptions context problem tactic = do
   let vars = variables problem
   run . ignoreWeight . evalFresh . runError . runReader context . runReader tacticOptions . runReader problem $ Lams vars <$> tactic
 
--- TODO: use relevancy
--- TODO: normalize problems by removing examples that are equivalent
--- TODO: do we want to use weights? it might be nicer to add those later,
---       if we add labels we can then use those to weigh the search.
-
 -- * Larger tactic groups
 
 eliminators :: Synth sig m => Name -> m Filling

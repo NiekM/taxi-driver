@@ -1,7 +1,7 @@
 module Tactic.Core
   ( Tactic,
     TacticFailure (..),
-    module Tactic.Settings,
+    module Tactic.Options,
     Filling,
     none,
     assume,
@@ -35,7 +35,7 @@ import Language.Expr
 import Language.Pretty ()
 import Language.Problem
 import Language.Type
-import Tactic.Settings
+import Tactic.Options
 import Utils
 
 data TacticFailure
@@ -54,7 +54,7 @@ instance Pretty TacticFailure where
 
 type Tactic sig m =
   ( Has (Reader DataContext) sig m,
-    Has (Reader Settings) sig m,
+    Has (Reader TacticOptions) sig m,
     Has (Reader Problem) sig m,
     Has Fresh sig m,
     Has Weight sig m,

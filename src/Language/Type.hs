@@ -61,17 +61,17 @@ data DataDef = DataDef
   } deriving stock (Eq, Ord, Show)
 
 base :: Named DataDef -> Maybe (Named DataDef)
-base (Named name def)
+base (Named name definition)
   | recursive = Just $ Named (name <> "F") basedef
   | otherwise = Nothing
   where
-    basedef = DataDef (def.arguments ++ ["r"]) cs
+    basedef = DataDef (definition.arguments ++ ["r"]) cs
 
-    (Any recursive, Compose cs) = traverse locate (Compose def.constructors)
+    (Any recursive, Compose cs) = traverse locate (Compose definition.constructors)
 
     locate :: Mono -> (Any, Mono)
     locate = \case
-      t | t == Data name (Free <$> def.arguments) -> (Any True, Free "r")
+      t | t == Data name (Free <$> definition.arguments) -> (Any True, Free "r")
       Product ts -> Product <$> traverse locate ts
       Data d ts -> Data d <$> traverse locate ts
       t -> (Any False, t)

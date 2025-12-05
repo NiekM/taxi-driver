@@ -1,4 +1,4 @@
-module Tactic.Settings (RealizabilityLevel(..), Settings(..), defaultSettings) where
+module Tactic.Options (RealizabilityLevel(..), TacticOptions(..)) where
 
 import Base
 
@@ -8,7 +8,7 @@ data RealizabilityLevel
   | PolyRealizability
   deriving stock (Eq, Ord, Show, Read, Enum, Bounded)
 
-data Settings = Settings
+data TacticOptions = TacticOptions
   { removeDuplicates   :: Bool
   , removeIrrelevant   :: Bool
   , checkCoverage      :: Bool
@@ -17,12 +17,12 @@ data Settings = Settings
   , realizabilityLevel :: RealizabilityLevel
   } deriving stock (Eq, Ord, Show, Read)
 
-defaultSettings :: Settings
-defaultSettings = Settings
-  { removeDuplicates   = True
-  , removeIrrelevant   = False
-  , checkCoverage      = True
-  , reconstructProblem = True
-  , conditionalBranch  = True
-  , realizabilityLevel = PolyRealizability
-  }
+instance Default TacticOptions where
+  def = TacticOptions
+    { removeDuplicates   = True
+    , removeIrrelevant   = False
+    , checkCoverage      = True
+    , reconstructProblem = True
+    , conditionalBranch  = True
+    , realizabilityLevel = PolyRealizability
+    }

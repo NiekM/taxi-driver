@@ -8,8 +8,7 @@ module Synth
   , Solution(..)
   , SynthFailure(..)
   , Extract(..)
-  , Arguments(..)
-  , def
+  , SynthOptions(..)
   , Synth
   , SynthC
   , step
@@ -46,22 +45,22 @@ import Data.List qualified as List
 import Utils
 import Data.Functor.Identity (Identity)
 
-data Arguments = Arguments
+data SynthOptions = SynthOptions
   { tactic :: SynthC Filling
   , fuel :: Maybe Nat
   , solutions :: Maybe Nat
-  , settings :: Settings
+  , tacticOptions :: TacticOptions
   , context :: DataContext
   }
 
-def :: Arguments
-def = Arguments
-  { tactic = auto
-  , fuel = Nothing
-  , solutions = Just 1
-  , settings = defaultSettings
-  , context = datatypes
-  }
+instance Default SynthOptions where
+  def = SynthOptions
+    { tactic = auto
+    , fuel = Nothing
+    , solutions = Just 1
+    , tacticOptions = def
+    , context = datatypes
+    }
 
 data SynthFailure
   = Exhausted -- out of programs
@@ -97,7 +96,7 @@ instance Pretty Solution where
 takeWhileJust :: [Maybe a] -> [a]
 takeWhileJust = foldr (maybe (const []) (:)) []
 
-synthesizeAll :: Arguments -> Problem -> [(Nat, Either TacticFailure Extract)]
+synthesizeAll :: SynthOptions -> Problem -> [(Nat, Either TacticFailure Extract)]
 synthesizeAll args problem = runSearch searchSpace & mapMaybe
   \(Sum weight, filling) -> (weight,) . fmap toExtract <$> filling
   where
@@ -113,11 +112,11 @@ synthesizeAll args problem = runSearch searchSpace & mapMaybe
       . evalFresh
       . runError
       . runReader args.context
-      . runReader args.settings
+      . runReader args.tacticOptions
       . runReader problem
       $ Lams (variables problem) <$> (rerealize hole >>> args.tactic)
 
-synthesize :: Arguments -> Problem -> Solution
+synthesize :: SynthOptions -> Problem -> Solution
 synthesize args problem = case dropFailures $ runSearch searchSpace of
   [] -> Failure Exhausted
   -- TODO: when we add a fuel limit, it says depleted even if it should be
@@ -144,7 +143,7 @@ synthesize args problem = case dropFailures $ runSearch searchSpace of
       . evalFresh
       . runError
       . runReader args.context
-      . runReader args.settings
+      . runReader args.tacticOptions
       . runReader problem
       $ Lams (variables problem) <$> (rerealize hole >>> args.tactic)
 
@@ -157,14 +156,14 @@ type Synth sig m = (Tactic sig m, Has Choose sig m)
 -- outputs the current state to the console? Or perhaps a next button that
 -- explores the next node (based on its weight).
 
-type TacticC m = ReaderC Problem (ReaderC Settings (ReaderC DataContext (ErrorC TacticFailure (FreshC m))))
+type TacticC m = ReaderC Problem (ReaderC TacticOptions (ReaderC DataContext (ErrorC TacticFailure (FreshC m))))
 
 type SynthC = TacticC (Search (Sum Nat))
 
-runTactic :: Settings -> DataContext -> Problem -> TacticC (IgnoreC Identity) Filling -> Either TacticFailure Filling
-runTactic settings context problem tactic = do
+runTactic :: TacticOptions -> DataContext -> Problem -> TacticC (IgnoreC Identity) Filling -> Either TacticFailure Filling
+runTactic tacticOptions context problem tactic = do
   let vars = variables problem
-  run . ignoreWeight . evalFresh . runError . runReader context . runReader settings . runReader problem $ Lams vars <$> tactic
+  run . ignoreWeight . evalFresh . runError . runReader context . runReader tacticOptions . runReader problem $ Lams vars <$> tactic
 
 -- TODO: use relevancy
 -- TODO: normalize problems by removing examples that are equivalent
@@ -175,7 +174,7 @@ runTactic settings context problem tactic = do
 
 eliminators :: Synth sig m => Name -> m Filling
 eliminators x = do
-  Settings { conditionalBranch } <- ask
+  TacticOptions { conditionalBranch } <- ask
   if conditionalBranch
     -- then Tactic.map x <|  Tactic.filter x <|  (softConditional 100 (Tactic.fold x) (weigh 3 >> elim x))
     then Tactic.map x <|  Tactic.filter x <|  (Tactic.fold x <|  (weigh 3 >> elim x))

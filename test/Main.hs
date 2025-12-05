@@ -77,4 +77,4 @@ main = do
 synthesisSucceeds :: [Named (Problem, Model)] -> TestTree
 synthesisSucceeds problems = testGroup "synthesis" $ problems <&> \(Named name (problem, model)) ->
   testProperty (Text.unpack name.getName) . withMaxSize 25 $ testSynthesis args problem model
-  where args = def { settings = defaultSettings { removeIrrelevant = False } }
+  where args = def { tacticOptions = def { removeIrrelevant = False } }

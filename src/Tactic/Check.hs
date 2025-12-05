@@ -15,7 +15,7 @@ rerealize :: Tactic sig m => m Filling -> m Filling
 rerealize cnt = do
   context <- ask
   problem <- ask
-  Settings { realizabilityLevel, checkCoverage, reconstructProblem } <- ask
+  TacticOptions { realizabilityLevel, checkCoverage, reconstructProblem } <- ask
   -- NOTE: not performing realizability breaks the map < foldr relation, so requires a weaker tactic.
   case realizabilityLevel of
     NoRealizability -> cnt

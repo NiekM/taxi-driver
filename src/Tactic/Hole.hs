@@ -16,11 +16,11 @@ import Utils
 
 hole :: Tactic sig m => m Filling
 hole = do
-  settings :: Settings <- ask
+  tacticOptions :: TacticOptions <- ask
   foldr @[] (.) id
     [ elimTuples
-    , applyWhen settings.removeDuplicates $ local removeIdenticalInputs
-    , applyWhen settings.removeIrrelevant removeIrrelevant
+    , applyWhen tacticOptions.removeDuplicates $ local removeIdenticalInputs
+    , applyWhen tacticOptions.removeIrrelevant removeIrrelevant
     ] none
 
 -- BUG: this currently seems to be not working as intended, as it influences the realizability,

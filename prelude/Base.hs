@@ -39,6 +39,7 @@ module Base
   , module GHC.Real
   , module Debug.Trace
   , Project(..)
+  , Default(..)
   , undefined
   , error
   ) where
@@ -104,3 +105,6 @@ error = Err.error
 
 class Project a where
   projections :: a -> [a]
+
+class Default a where
+  def :: a

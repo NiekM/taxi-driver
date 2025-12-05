@@ -151,9 +151,9 @@ instance Pretty (Named Signature) where
   pretty (Named name sig) = pretty name <+> ":" <+> pretty sig
 
 instance Pretty (Named DataDef) where
-  pretty (Named name def) =
-    "data" <+> sep (pretty name : map pretty def.arguments) <+>
-      "=" <+> concatWith (surround " | ") (def.constructors <&>
+  pretty (Named name definition) =
+    "data" <+> sep (pretty name : map pretty definition.arguments) <+>
+      "=" <+> concatWith (surround " | ") (definition.constructors <&>
       \c -> sep (prettyCtr c.name : map prettyMaxPrec (projections c.value)))
 
 instance Pretty DataContext where

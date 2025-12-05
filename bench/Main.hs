@@ -15,7 +15,7 @@ import Language.Expr
 import Language.Parser
 import Language.Problem
 import Language.Prelude
-import Tactic.Settings
+import Tactic.Options
 import Tactic.Core
 import Tactic.Fold qualified as Tactic
 import Synth
@@ -39,7 +39,7 @@ getBenchmark = forM models . mapM $ mapM \(Named name model@(Model fun)) -> do
 
   return $ Named name (problem, model)
 
-synthCheck :: Arguments -> Problem -> Model -> IO (String, Bool)
+synthCheck :: SynthOptions -> Problem -> Model -> IO (String, Bool)
 synthCheck args problem (Model model) = do
   timed <- timeout 1_000_000 . Control.Exception.evaluate $ synthesize args problem
   case timed of
@@ -98,12 +98,12 @@ synthBench options problems = testGroup (show $ pretty options) <$>
     return $ testGroup (show $ pretty group.name) groupBenches
   where
     maxLength = maximum $ problems >>= \x -> map (Text.length . (.name.getName)) x.value
-    settings = case options of
+    tacticOptions = case options of
       NoFeasibility ->
-        defaultSettings { realizabilityLevel = NoRealizability, checkCoverage = False, conditionalBranch = False }
+        def { realizabilityLevel = NoRealizability, checkCoverage = False, conditionalBranch = False }
       Feasibility { coverage, branching } ->
-        defaultSettings { realizabilityLevel = PolyRealizability, checkCoverage = coverage, conditionalBranch = branching }
-    synArgs = def { settings }
+        def { realizabilityLevel = PolyRealizability, checkCoverage = coverage, conditionalBranch = branching }
+    synArgs = def { tacticOptions }
     showName :: Name -> String -> String
     showName name message = Text.unpack name.getName <> padding <> "(" <> message <> ")"
       where padding = Base.replicate (maxLength + 3 - Text.length name.getName) ' '
@@ -154,7 +154,7 @@ foldCheck :: Named Problem -> Benchmark
 foldCheck (Named name problem) = bench (Text.unpack name.getName) $ whnf (isFold "xs") problem
 
 isFold :: Name -> Problem -> Bool
-isFold var problem = case runTactic defaultSettings datatypes problem (Tactic.fold var) of
+isFold var problem = case runTactic def datatypes problem (Tactic.fold var) of
   Left _ -> False
   Right _ -> True
 

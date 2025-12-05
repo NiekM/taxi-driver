@@ -15,7 +15,7 @@ import Synth
 
 import Bench.Model qualified as Model
 
-trySynthesize :: Arguments -> Problem -> Maybe (Program Void)
+trySynthesize :: SynthOptions -> Problem -> Maybe (Program Void)
 trySynthesize args problem = case synthesize args problem of
   Failure Depleted -> Nothing
   Failure Exhausted -> Nothing
@@ -24,7 +24,7 @@ trySynthesize args problem = case synthesize args problem of
     | testProblem program problem -> Just program
     | otherwise -> Nothing
 
-testSynthesis :: Arguments -> Problem -> Model -> Property
+testSynthesis :: SynthOptions -> Problem -> Model -> Property
 testSynthesis args problem (Model model) = case trySynthesize args problem of
   Nothing -> discard
   Just program -> comparison model (interpret program)

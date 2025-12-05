@@ -4,12 +4,11 @@ module Main (main) where
 
 import Base
 
-import Data.Text qualified as Text
 import Data.Typeable
 
 import Test.QuickCheck (Arbitrary)
 import Test.Tasty
-import Test.Tasty.QuickCheck (testProperty, forAll, discard, classify, withMaxSize)
+import Test.Tasty.QuickCheck (testProperty, forAll, discard, classify)
 
 import Data.Tree.Binary
 import Language.Arbitrary qualified as Arbitrary
@@ -18,9 +17,6 @@ import Language.Container.Morphism
 import Language.Expr
 import Language.Spec
 import Language.Prelude
-import Tactic
-import Synth
-import Bench
 
 showType :: forall a -> Typeable a => String
 showType t = show . typeRep $ Proxy @t
@@ -73,7 +69,3 @@ main = do
     , relationConsistency
     , ruleConsistency
     ]
-
-synthesisSucceeds :: [Named (Spec, Model)] -> TestTree
-synthesisSucceeds problems = testGroup "synthesis" $ problems <&> \(Named name (problem, model)) ->
-  testProperty (Text.unpack name.getName) . withMaxSize 25 $ testSynthesis def problem model

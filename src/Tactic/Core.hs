@@ -53,12 +53,12 @@ instance Pretty TacticFailure where
     Unrealizable conflict -> pretty conflict
 
 type Tactic sig m =
-  ( Has (Reader DataContext) sig m,
-    Has (Reader TacticOptions) sig m,
-    Has (Reader Problem) sig m,
-    Has Fresh sig m,
-    Has Weight sig m,
-    Has (Error TacticFailure) sig m
+  ( Has (Reader DataContext) sig m
+  , Has (Reader TacticOptions) sig m
+  , Has (Reader Problem) sig m
+  , Has Fresh sig m
+  , Has Weight sig m
+  , Has (Error TacticFailure) sig m
   )
 
 type Filling = Program Problem

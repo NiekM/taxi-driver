@@ -213,4 +213,3 @@ loadDedupRefinements = do
 -- >>> ps <- loadDedupRefinements 
 -- >>> pretty . zip [1..] $ check datatypes . (.value) <$> ps
 -- <only 3, 4, and 5 are not contradictory>
-

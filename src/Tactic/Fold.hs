@@ -143,4 +143,3 @@ cata name = do
 
     let result = Apps (Var "cata") [Lams [r] f, Var name]
     return result
-

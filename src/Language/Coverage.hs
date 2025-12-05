@@ -107,5 +107,4 @@ coverage dataContext signature examples = case expectedCoverage dataContext sign
     let
       covered = ruleCoverage examples
       missing = expected Set.\\ covered
-      -- shapes = Set.map (.shapes) expected Set.\\ Set.map (.shapes) covered
     in if null missing then Total else Missing missing

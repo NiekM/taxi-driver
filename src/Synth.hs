@@ -171,7 +171,6 @@ eliminators :: Synth sig m => Name -> m Filling
 eliminators x = do
   TacticOptions { conditionalBranch } <- ask
   if conditionalBranch
-    -- then Tactic.map x <|  Tactic.filter x <|  (softConditional 100 (Tactic.fold x) (weigh 3 >> elim x))
     then Tactic.map x <|  Tactic.filter x <|  (Tactic.fold x <|  (weigh 3 >> elim x))
     else Tactic.map x <|> Tactic.filter x <|> (Tactic.fold x <|> (weigh 3 >> elim x))
 

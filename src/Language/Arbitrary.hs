@@ -29,7 +29,6 @@ sizedMono :: [Name] -> Nat -> Gen Mono
 sizedMono free size = case size of
   0 -> frequency . map (second pure) $
     [ (1, Top)
-    -- , (2, Base Int)
     ] ++ [ (5, Free v) | v <- free ]
   n -> oneof . map snd $ filter fst
     [ (n >= 2,) $ Data "Tree" <$> do
